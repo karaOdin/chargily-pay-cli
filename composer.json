@@ -1,0 +1,55 @@
+{
+    "name": "karaodin/chargily-pay-cli",
+    "description": "Professional CLI tool for Chargily Pay - Manage payments, customers, products, and payment links with advanced features and multi-application support.",
+    "keywords": ["chargily", "payment", "cli", "algeria", "fintech", "laravel-zero", "payment-gateway", "e-commerce"],
+    "homepage": "https://github.com/karaOdin/chargily-pay-cli",
+    "type": "project",
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/karaOdin/chargily-pay-cli/issues",
+        "source": "https://github.com/karaOdin/chargily-pay-cli",
+        "docs": "https://github.com/karaOdin/chargily-pay-cli#readme"
+    },
+    "authors": [
+        {
+            "name": "KaraOdin",
+            "email": "karaodin@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-mbstring": "*",
+        "illuminate/http": "^12.17",
+        "illuminate/log": "^12.17",
+        "laravel-zero/framework": "^12.0",
+        "nunomaduro/laravel-console-menu": "^3.5"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.22",
+        "mockery/mockery": "^1.6.12",
+        "pestphp/pest": "^3.8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "bin": ["chargily"]
+}

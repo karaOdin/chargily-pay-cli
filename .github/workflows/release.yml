@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+
+    - name: Get release version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build PHAR
+      run: php chargily app:build --build-version=${{ steps.get_version.outputs.VERSION }}
+
+    - name: Rename PHAR
+      run: mv builds/chargily builds/chargily.phar
+
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/chargily.phar
+        asset_name: chargily.phar
+        asset_content_type: application/octet-stream
+
+    - name: Create checksums
+      run: |
+        cd builds
+        sha256sum chargily.phar > chargily.phar.sha256
+        md5sum chargily.phar > chargily.phar.md5
+
+    - name: Upload checksum files
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/chargily.phar.sha256
+        asset_name: chargily.phar.sha256
+        asset_content_type: text/plain
+
+    - name: Upload MD5 checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/chargily.phar.md5
+        asset_name: chargily.phar.md5
+        asset_content_type: text/plain

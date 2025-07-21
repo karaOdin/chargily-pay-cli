@@ -1,0 +1,63 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/builds/
+*.phar
+
+# IDE files
+.vscode/
+.idea/
+.vagrant/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PHP
+*.log
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.testing
+
+# Configuration files (contains API keys)
+chargily_applications.json
+config.json
+
+# Storage
+/storage/app/*
+!/storage/app/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Coverage reports
+/coverage/
+coverage.xml
+clover.xml
+
+# Temporary files
+*.tmp
+*.temp
+
+# Laravel specific
+/bootstrap/cache/*.php
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
+
+# Pest / PHPUnit
+/.pest/
+/.phpunit.result.cache
