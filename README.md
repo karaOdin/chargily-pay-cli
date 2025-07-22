@@ -32,9 +32,15 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 **🎯 One-Line Install (Recommended)**
 
-**Windows:**
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.ps1 -OutFile install.ps1; .\install.ps1
+```
+
+**Windows (Command Prompt):**
 ```cmd
-curl -o install.bat https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.bat && install.bat
+curl -o install.bat https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.bat
+install.bat
 ```
 
 **Linux/macOS:**
