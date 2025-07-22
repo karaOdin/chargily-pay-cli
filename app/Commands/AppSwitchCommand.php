@@ -32,11 +32,13 @@ class AppSwitchCommand extends Command
 
         if (empty($apps)) {
             $this->error('No applications configured. Run "chargily configure" first.');
+
             return 1;
         }
 
         if (count($apps) === 1) {
             $this->info('Only one application configured.');
+
             return 0;
         }
 
@@ -56,6 +58,7 @@ class AppSwitchCommand extends Command
 
         if ($selected === $current) {
             $this->info('Already using this application.');
+
             return 0;
         }
 

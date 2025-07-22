@@ -125,7 +125,7 @@ class AppSetupCommand extends Command
             // Create temporary application config for testing
             $tempAppId = 'temp_setup';
             $this->config->createApplication($tempAppId, 'Setup Temp', [
-                $mode => ['api_key' => $apiKey]
+                $mode => ['api_key' => $apiKey],
             ]);
 
             // Test API connection
@@ -175,14 +175,14 @@ class AppSetupCommand extends Command
                     'api_key' => $testKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
+                    'default_failure_url' => '',
                 ],
                 'live' => [
                     'api_key' => $liveKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
-                ]
+                    'default_failure_url' => '',
+                ],
             ]);
 
             // Set as current application
