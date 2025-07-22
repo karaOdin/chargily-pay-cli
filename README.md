@@ -52,6 +52,23 @@ sudo mv chargily /usr/local/bin/
 docker run -it ghcr.io/karaodin/chargily-pay-cli:latest
 ```
 
+### Windows Installation
+
+For Windows users, install using one of these methods:
+
+**Method 1: Ignore Platform Requirements**
+```cmd
+composer global require karaodin/chargily-pay-cli --ignore-platform-req=ext-posix
+```
+
+**Method 2: Enable WSL (Windows Subsystem for Linux)**
+```cmd
+wsl --install
+# Then use any Linux installation method above
+```
+
+> **Note**: On Windows, interactive menus require the POSIX extension. The CLI will automatically fall back to individual commands if not available.
+
 ### First Run
 
 ```bash

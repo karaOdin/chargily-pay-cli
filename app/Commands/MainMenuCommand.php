@@ -34,6 +34,11 @@ class MainMenuCommand extends Command
             return $this->showSetupWizard();
         }
 
+        // Check if interactive menu is supported (POSIX extension)
+        if (!$this->isInteractiveMenuSupported()) {
+            return $this->showCommandListMenu();
+        }
+
         // Show main interactive menu immediately for normal use
         return $this->showMainMenu();
     }
@@ -69,6 +74,36 @@ class MainMenuCommand extends Command
         }
         
         return false;
+    }
+
+    protected function isInteractiveMenuSupported(): bool
+    {
+        // Check if POSIX extension is available (required for interactive menus)
+        return extension_loaded('posix');
+    }
+
+    protected function showCommandListMenu(): int
+    {
+        $this->displayHeader();
+        
+        $this->warn('📱 Interactive menu not supported on this system (missing POSIX extension).');
+        $this->info('💡 Use individual commands instead:');
+        $this->line('');
+        
+        $this->line('📋 Available Commands:');
+        $this->line('  🏢 chargily configure      - Manage applications');
+        $this->line('  💰 chargily balance        - Check account balance');
+        $this->line('  💳 chargily payment:create - Create a new payment');
+        $this->line('  📋 chargily payment:list   - List payments');
+        $this->line('  🔍 chargily payment:status - Check payment status');
+        $this->line('  🔄 chargily mode:switch    - Switch test/live mode');
+        $this->line('  🏢 chargily app:switch     - Switch applications');
+        $this->line('');
+        
+        $this->line('💡 Example: chargily balance');
+        $this->line('📖 Help: chargily <command> --help');
+        
+        return 0;
     }
     
     public function checkAppsAndShowWizardIfNeeded(): int
