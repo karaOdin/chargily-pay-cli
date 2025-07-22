@@ -67,7 +67,7 @@ jobs:
         ./vendor/laravel-zero/framework/bin/box compile
 
     - name: Upload PHAR artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: chargily-phar
         path: chargily.phar
