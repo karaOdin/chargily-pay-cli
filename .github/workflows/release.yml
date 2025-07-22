@@ -41,6 +41,7 @@ jobs:
     # Build Windows PHAR (without interactive menus)
     - name: Install dependencies for Windows
       run: |
+        rm -rf vendor composer.lock
         cp composer-windows.json composer.json
         composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
 
@@ -51,7 +52,9 @@ jobs:
 
     # Restore original composer.json
     - name: Restore original composer.json
-      run: git checkout -- composer.json
+      run: |
+        git checkout -- composer.json composer.lock
+        composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
 
     - name: Create checksums
       run: |
