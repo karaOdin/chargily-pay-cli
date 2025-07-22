@@ -21,29 +21,37 @@ jobs:
         php-version: 8.2
         extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader --ignore-platform-req=ext-posix --ignore-platform-req=ext-fileinfo
-      # Note: We ignore posix and fileinfo requirements because:
-      # - POSIX is not available on Windows
-      # - CLI automatically falls back to individual commands when menu package is unavailable
-      # - This ensures cross-platform compatibility
-
     - name: Get release version
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-    - name: Build PHAR using Box
+    # Build Linux/macOS PHAR (with interactive menus)
+    - name: Install dependencies for Linux/macOS
+      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+
+    - name: Build Linux/macOS PHAR
       run: |
         chmod +x ./vendor/laravel-zero/framework/bin/box
         ./vendor/laravel-zero/framework/bin/box compile
-
-    - name: Create platform-specific builds
-      run: |
         mkdir -p builds
         cp chargily.phar builds/chargily-linux
         cp chargily.phar builds/chargily-macos
-        cp chargily.phar builds/chargily-windows.phar
         chmod +x builds/chargily-linux builds/chargily-macos
+
+    # Build Windows PHAR (without interactive menus)
+    - name: Install dependencies for Windows
+      run: |
+        cp composer-windows.json composer.json
+        composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+
+    - name: Build Windows PHAR  
+      run: |
+        ./vendor/laravel-zero/framework/bin/box compile
+        cp chargily.phar builds/chargily-windows.phar
+
+    # Restore original composer.json
+    - name: Restore original composer.json
+      run: git checkout -- composer.json
 
     - name: Create checksums
       run: |
