@@ -28,26 +28,28 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 ## 🛠️ Quick Start
 
-### 📥 Installation (Zero Configuration!)
+### 📥 Installation (Super Easy!)
 
-**🎯 Method 1: Composer Global (Cross-Platform)**
+**🎯 One-Line Install (Recommended)**
+
+**Windows:**
+```cmd
+curl -o install.bat https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.bat && install.bat
+```
+
+**Linux/macOS:**
 ```bash
-# Install the CLI
+curl -fsSL https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.sh | bash
+```
+
+**Manual Installation (Advanced Users)**
+```bash
+# Install via Composer
 composer global require karaodin/chargily-pay-cli
 
-# Run directly (no PATH setup needed):
+# Run directly:
 ~/.config/composer/vendor/bin/chargily  # Linux/macOS
-%APPDATA%\Composer\vendor\bin\chargily.bat  # Windows
-
-# Or add to PATH for global access:
-# Linux/macOS: Add to ~/.bashrc or ~/.zshrc
-export PATH="$PATH:$HOME/.config/composer/vendor/bin"
-
-# Windows: Add to System Environment Variables
-# %APPDATA%\Composer\vendor\bin
-
-# Then run anywhere:
-chargily
+php "%APPDATA%\Composer\vendor\karaodin\chargily-pay-cli\chargily"  # Windows
 ```
 
 **⚡ Method 2: Direct Executable Download**
