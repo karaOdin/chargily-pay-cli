@@ -6,6 +6,7 @@ use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
+
 // Note: Menu is conditionally loaded based on package availability
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\text;
@@ -13,9 +14,11 @@ use function Laravel\Prompts\text;
 class MainMenuCommand extends Command
 {
     protected $signature = 'menu {--app= : Use specific application} {--mode= : Force specific mode}';
+
     protected $description = 'Interactive main menu for Chargily Pay CLI';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -28,14 +31,15 @@ class MainMenuCommand extends Command
     public function handle(): int
     {
         // Check if we have any valid applications configured
-        if (!$this->hasValidApplications()) {
+        if (! $this->hasValidApplications()) {
             // Only show delay when triggering wizard
             $this->displayWizardLoadingMessage();
+
             return $this->showSetupWizard();
         }
 
         // Check if interactive menu is supported (POSIX extension)
-        if (!$this->isInteractiveMenuSupported()) {
+        if (! $this->isInteractiveMenuSupported()) {
             return $this->showCommandListMenu();
         }
 
@@ -47,32 +51,32 @@ class MainMenuCommand extends Command
     {
         $this->info('🚀 Starting Chargily Pay CLI...');
         $this->line('🔍 Checking configured applications...');
-        
+
         // Add 2-second delay only when showing wizard
         sleep(2);
-        
+
         $this->line('');
     }
 
     protected function hasValidApplications(): bool
     {
         $apps = $this->config->getApplications();
-        
+
         if (empty($apps)) {
             return false;
         }
-        
+
         // Check if any app has at least one valid API key
         foreach ($apps as $appId => $appConfig) {
             $testKey = $appConfig['test']['api_key'] ?? null;
             $liveKey = $appConfig['live']['api_key'] ?? null;
-            
+
             // An app is valid if it has at least one non-null API key
-            if (!empty($testKey) || !empty($liveKey)) {
+            if (! empty($testKey) || ! empty($liveKey)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -85,11 +89,11 @@ class MainMenuCommand extends Command
     protected function showCommandListMenu(): int
     {
         $this->displayHeader();
-        
+
         $this->warn('📱 Interactive menu not supported on this system.');
         $this->info('💡 Use individual commands instead:');
         $this->line('');
-        
+
         $this->line('📋 Available Commands:');
         $this->line('  🏢 chargily configure      - Manage applications');
         $this->line('  💰 chargily balance        - Check account balance');
@@ -99,26 +103,26 @@ class MainMenuCommand extends Command
         $this->line('  🔄 chargily mode:switch    - Switch test/live mode');
         $this->line('  🏢 chargily app:switch     - Switch applications');
         $this->line('');
-        
+
         $this->line('💡 Example: chargily balance');
         $this->line('📖 Help: chargily <command> --help');
-        
+
         return 0;
     }
-    
+
     public function checkAppsAndShowWizardIfNeeded(): int
     {
-        if (!$this->hasValidApplications()) {
+        if (! $this->hasValidApplications()) {
             $this->line('');
             $this->warn('⚠️  No valid applications found!');
             $this->line('Setting up your first application...');
-            
+
             // Add delay before showing wizard
             sleep(2);
-            
+
             return $this->showSetupWizard();
         }
-        
+
         return 0;
     }
 
@@ -130,19 +134,21 @@ class MainMenuCommand extends Command
         $this->line('');
         $this->line('No applications configured yet. Let\'s set up your first application.');
         $this->line('');
-        
+
         // Show guidance on getting API keys
         $this->displayApiKeyGuidance();
-        
+
         try {
-            if (!confirm('Ready to setup your first application? (Press Ctrl+C to exit)', true)) {
+            if (! confirm('Ready to setup your first application? (Press Ctrl+C to exit)', true)) {
                 $this->line('');
                 $this->line('💡 Run this command again when you\'re ready to setup.');
+
                 return 0;
             }
         } catch (\Exception $e) {
             $this->line('');
             $this->info('👋 Setup cancelled. Run this command again when ready.');
+
             return 0;
         }
 
@@ -174,7 +180,7 @@ class MainMenuCommand extends Command
         $this->line('║                    Application Setup                        ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
-        
+
         try {
             // Get application details
             $name = text(
@@ -187,14 +193,15 @@ class MainMenuCommand extends Command
                 'Application identifier (used internally) - Press Ctrl+C to cancel',
                 default: str_replace([' ', '-'], '_', strtolower($name)),
                 required: true,
-                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                    ? null 
+                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                    ? null
                     : 'Must contain only lowercase letters, numbers, and underscores'
             );
 
             // Check if identifier already exists (shouldn't happen in wizard, but safety first)
             if ($this->config->applicationExists($id)) {
                 $this->error("Application '{$id}' already exists!");
+
                 return 1;
             }
 
@@ -204,16 +211,20 @@ class MainMenuCommand extends Command
 
             // Get test API key
             $testKey = $this->getValidatedApiKeyWithGuidance('test');
-            if (!$testKey) return 0;
+            if (! $testKey) {
+                return 0;
+            }
 
             // Ask about live key
             $this->line('');
             $addLiveKey = confirm('Would you like to add your LIVE API key now? (You can add it later)', false);
-            
+
             $liveKey = null;
             if ($addLiveKey) {
                 $liveKey = $this->getValidatedApiKeyWithGuidance('live');
-                if (!$liveKey) return 0;
+                if (! $liveKey) {
+                    return 0;
+                }
             }
 
             // Create the application
@@ -223,14 +234,14 @@ class MainMenuCommand extends Command
                     'api_key' => $testKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
+                    'default_failure_url' => '',
                 ],
                 'live' => [
                     'api_key' => $liveKey ?: '',
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
-                ]
+                    'default_failure_url' => '',
+                ],
             ];
 
             $this->config->createApplication($id, $config);
@@ -245,13 +256,13 @@ class MainMenuCommand extends Command
             $this->info("✅ Application '{$name}' created successfully!");
             $this->line("📊 Current: {$name} → 🧪 TEST MODE");
             $this->line('');
-            
+
             $this->line('🚀 <fg=green>You\'re all set! Here\'s what you can do now:</>');
             $this->line('   • 💳 Create test payments');
-            $this->line('   • 📋 List your payment history'); 
+            $this->line('   • 📋 List your payment history');
             $this->line('   • 💰 Check your balance');
             $this->line('   • ⚙️  Configure additional settings');
-            if (!$liveKey) {
+            if (! $liveKey) {
                 $this->line('   • 🔴 Add your live API key later via configuration');
             }
             $this->line('');
@@ -264,6 +275,7 @@ class MainMenuCommand extends Command
         } catch (\Exception $e) {
             $this->line('');
             $this->info('👋 Setup cancelled.');
+
             return 0;
         }
     }
@@ -286,7 +298,7 @@ class MainMenuCommand extends Command
             try {
                 $apiKey = text(
                     "{$modeDisplay} API Key - Press Ctrl+C to cancel",
-                    placeholder: $keyPrefix . '...',
+                    placeholder: $keyPrefix.'...',
                     required: true,
                     validate: fn ($value) => str_starts_with($value, $keyPrefix)
                         ? null
@@ -295,8 +307,9 @@ class MainMenuCommand extends Command
 
                 // For now, skip validation to avoid issues - user confirmed keys work
                 $this->info("✅ {$modeDisplay} API key accepted!");
+
                 return $apiKey;
-                
+
                 // TODO: Fix validation and re-enable
                 // Validate key silently by checking balance
                 // $this->line('🔍 Validating API key...');
@@ -318,6 +331,7 @@ class MainMenuCommand extends Command
 
         $this->error('❌ Too many invalid attempts.');
         $this->line('💡 Double-check your API key in the Chargily dashboard and try again.');
+
         return null;
     }
 
@@ -325,14 +339,14 @@ class MainMenuCommand extends Command
     {
         try {
             // Create temporary application config for testing
-            $tempAppId = 'temp_validation_' . uniqid();
+            $tempAppId = 'temp_validation_'.uniqid();
             $config = ['name' => 'Temp Validation'];
             if ($mode === 'test') {
                 $config['test_api_key'] = $apiKey;
             } else {
                 $config['live_api_key'] = $apiKey;
             }
-            
+
             $this->config->createApplication($tempAppId, $config);
 
             // Test API connection by checking balance
@@ -343,7 +357,7 @@ class MainMenuCommand extends Command
             $this->config->deleteApplication($tempAppId);
 
             return true;
-            
+
         } catch (\Exception $e) {
             // Clean up temporary config on error
             try {
@@ -359,11 +373,11 @@ class MainMenuCommand extends Command
     protected function showMainMenu(): int
     {
         $this->displayHeader();
-        
+
         $currentApp = $this->config->getCurrentApplication();
         $currentMode = $this->config->getCurrentMode();
         $app = $this->config->getApplication($currentApp);
-        
+
         // Try to get balance (cached or fresh)
         $balanceInfo = $this->getBalanceInfo($currentApp, $currentMode);
 
@@ -373,6 +387,7 @@ class MainMenuCommand extends Command
         // Handle case where menu returns null (user pressed Ctrl+C or ESC)
         if ($selected === null) {
             $this->info('👋 Goodbye!');
+
             return 0;
         }
 
@@ -384,29 +399,30 @@ class MainMenuCommand extends Command
         // Try to use interactive menu if available
         if (class_exists('NunoMaduro\LaravelConsoleMenu\Menu')) {
             $menu = app('NunoMaduro\LaravelConsoleMenu\Menu')->setTitle('Chargily Pay CLI - Main Menu');
-            
+
             // Add menu options
             $menu->addOption('payment:create', '💳 Create Payment')
-                 ->addOption('payment:status', '🔍 Check Payment Status')  
-                 ->addOption('payment:list', '📋 List Recent Payments')
-                 ->addOption('separator1', '─────────────────────')
-                 ->addOption('customer:manage', '👥 Manage Customers')
-                 ->addOption('product:manage', '📦 Manage Products & Prices')
-                 ->addOption('link:manage', '🔗 Manage Payment Links')
-                 ->addOption('separator2', '─────────────────────')
-                 ->addOption('balance', '💰 Check Balance')
-                 ->addOption('configure', '⚙️  Configuration')
-                 ->addOption('switch:app', '🏢 Switch Application')
-                 ->addOption('switch:mode', '🔄 Switch Mode')
-                 ->addOption('separator3', '─────────────────────')
-                 ->addOption('help', '📚 Help & Documentation')
-                 ->addOption('exit', '🚪 Exit');
+                ->addOption('payment:status', '🔍 Check Payment Status')
+                ->addOption('payment:list', '📋 List Recent Payments')
+                ->addOption('separator1', '─────────────────────')
+                ->addOption('customer:manage', '👥 Manage Customers')
+                ->addOption('product:manage', '📦 Manage Products & Prices')
+                ->addOption('link:manage', '🔗 Manage Payment Links')
+                ->addOption('separator2', '─────────────────────')
+                ->addOption('balance', '💰 Check Balance')
+                ->addOption('configure', '⚙️  Configuration')
+                ->addOption('switch:app', '🏢 Switch Application')
+                ->addOption('switch:mode', '🔄 Switch Mode')
+                ->addOption('separator3', '─────────────────────')
+                ->addOption('help', '📚 Help & Documentation')
+                ->addOption('exit', '🚪 Exit');
 
             return $menu->open();
         }
-        
+
         // Fallback to command list
         $this->showCommandListMenu();
+
         return 'exit';
     }
 
@@ -431,26 +447,26 @@ class MainMenuCommand extends Command
 
         $modeDisplay = $currentMode;
         if ($globalMode) {
-            $modeDisplay .= " (Global Override)";
+            $modeDisplay .= ' (Global Override)';
         }
 
         $balanceInfo = $this->getBalanceInfo($currentApp, $currentMode);
-        
+
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line('║                     Chargily Pay CLI                        ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
-        $this->line("📊 Current: {$app['name']} → " . ($currentMode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE'));
-        
+        $this->line("📊 Current: {$app['name']} → ".($currentMode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE'));
+
         if ($balanceInfo) {
             $this->line("💰 Balance: {$balanceInfo}");
         }
-        
+
         if ($globalMode) {
             $this->warn("⚠️  Global mode override active: {$globalMode}");
         }
-        
+
         $this->line('');
     }
 
@@ -461,22 +477,24 @@ class MainMenuCommand extends Command
             $cached = $this->config->getCachedBalance($app, $mode);
             if ($cached) {
                 $balance = $cached['wallets'][0]['balance'] ?? 'Unknown';
+
                 return "{$balance} DZD (cached)";
             }
 
             // If no cache, try to get fresh balance (but don't block if it fails)
             $apiKey = $this->config->getApiKey($app, $mode);
-            if (!$apiKey) {
-                return "API key not configured";
+            if (! $apiKey) {
+                return 'API key not configured';
             }
 
             // Quick balance check
             $result = $this->api->setApplication($app)->setMode($mode)->getBalance();
             $balance = $result['wallets'][0]['balance'] ?? 'Unknown';
+
             return "{$balance} DZD";
-            
+
         } catch (\Exception $e) {
-            return "Unable to fetch balance";
+            return 'Unable to fetch balance';
         }
     }
 
@@ -486,7 +504,7 @@ class MainMenuCommand extends Command
         if ($selection === null) {
             return 0;
         }
-        
+
         // Handle separators by showing menu again
         if (str_starts_with($selection, 'separator')) {
             return $this->showMainMenu();
@@ -495,53 +513,68 @@ class MainMenuCommand extends Command
         switch ($selection) {
             case 'payment:create':
                 $this->call('payment:create');
+
                 return $this->showMainMenu();
             case 'payment:status':
                 $this->call('payment:status');
+
                 return $this->showMainMenu();
             case 'payment:list':
                 $this->call('payment:list');
+
                 return $this->showMainMenu();
             case 'customer:manage':
                 $this->call('customer:manage');
+
                 return $this->showMainMenu();
             case 'product:manage':
                 $this->call('product:manage');
+
                 return $this->showMainMenu();
             case 'link:manage':
                 $this->call('link:manage');
+
                 return $this->showMainMenu();
             case 'balance':
                 $this->call('balance');
+
                 return $this->showMainMenu();
             case 'configure':
                 $this->call('configure');
                 // Check if apps still exist after configuration changes
-                if (!$this->hasValidApplications()) {
+                if (! $this->hasValidApplications()) {
                     // Show wizard if no valid apps remain
                     $this->displayWizardLoadingMessage();
+
                     return $this->showSetupWizard();
                 }
+
                 return $this->showMainMenu();
             case 'switch:app':
                 $this->call('app:switch');
                 // Check if apps still exist after switching
-                if (!$this->hasValidApplications()) {
+                if (! $this->hasValidApplications()) {
                     $this->displayWizardLoadingMessage();
+
                     return $this->showSetupWizard();
                 }
+
                 return $this->showMainMenu();
             case 'switch:mode':
                 $this->call('mode:switch');
+
                 return $this->showMainMenu();
             case 'help':
                 $this->displayHelp();
+
                 return $this->showMainMenu();
             case 'exit':
                 $this->info('👋 Goodbye!');
+
                 return 0;
             default:
                 $this->error("Command '{$selection}' not yet implemented.");
+
                 return $this->showMainMenu();
         }
     }
@@ -553,10 +586,10 @@ class MainMenuCommand extends Command
         $this->line('║                        Help & Usage                         ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
-        
+
         $this->info('🚀 Chargily Pay CLI Commands:');
         $this->line('');
-        
+
         $commands = [
             'Payment Operations' => [
                 'payment:create' => 'Create a new payment checkout',
@@ -587,18 +620,18 @@ class MainMenuCommand extends Command
             }
             $this->line('');
         }
-        
-        $this->line('💡 <fg=green>Tips:</>' );
+
+        $this->line('💡 <fg=green>Tips:</>');
         $this->line('   • Use <fg=cyan>chargily menu</> for interactive mode');
         $this->line('   • Add <fg=cyan>--help</> to any command for detailed options');
         $this->line('   • Start with test mode, switch to live when ready');
         $this->line('');
-        
+
         $this->line('🌐 <fg=green>Resources:</>');
         $this->line('   • Chargily API Docs: <fg=blue>https://dev.chargily.com</>');
         $this->line('   • CLI Documentation: <fg=blue>https://github.com/karaOdin/chargily-pay-cli</>');
         $this->line('');
-        
+
         // Wait for user input before returning to menu
         $this->waitForUser();
     }
@@ -608,7 +641,7 @@ class MainMenuCommand extends Command
         $this->line('');
         $this->info('Press any key to continue...');
         $this->line('');
-        
+
         // Simple way to wait for user input
         fgets(STDIN);
     }

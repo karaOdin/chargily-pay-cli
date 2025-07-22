@@ -6,6 +6,7 @@ use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\select;
 
 class AppSwitchCommand extends Command

@@ -2,9 +2,9 @@
 
 namespace App\Commands;
 
+use App\Exceptions\ChargilyApiException;
 use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
-use App\Exceptions\ChargilyApiException;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
 
@@ -18,6 +18,7 @@ class BalanceCommand extends Command
     protected $description = 'Check account balance';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -37,7 +38,7 @@ class BalanceCommand extends Command
         if ($this->checkNoValidApps()) {
             return $this->showWizardWithDelay();
         }
-        
+
         $appId = $this->option('app') ?: $this->config->getCurrentApplication();
         $fresh = $this->option('fresh');
 
@@ -53,17 +54,18 @@ class BalanceCommand extends Command
 
         try {
             $balance = $this->api->setApplication($appId)->setMode($mode)->getBalance($fresh);
-            
+
             $this->displayBalance($balance, $fresh);
-            
+
             // Wait for user input before returning (when called from menu)
             $this->waitForUser();
-            
+
             return 0;
-            
+
         } catch (ChargilyApiException $e) {
-            $this->error('❌ ' . $e->getUserMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('❌ '.$e->getUserMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -81,40 +83,41 @@ class BalanceCommand extends Command
 
         foreach ($apps as $appId => $app) {
             $this->line("🏢 {$app['name']} ({$appId})");
-            
+
             foreach (['test', 'live'] as $mode) {
                 $apiKey = $this->config->getApiKey($appId, $mode);
-                
-                if (!$apiKey) {
+
+                if (! $apiKey) {
                     $this->line("   {$mode}: ❌ Not configured");
+
                     continue;
                 }
 
                 try {
                     $balance = $this->api->setApplication($appId)->setMode($mode)->getBalance();
                     $dzdBalance = $balance['wallets'][0]['balance'] ?? 0;
-                    
+
                     if ($mode === 'test') {
                         $totalTestDZD += $dzdBalance;
                     } else {
                         $totalLiveDZD += $dzdBalance;
                     }
-                    
+
                     $modeIcon = $mode === 'live' ? '🔴' : '🧪';
                     $this->line("   {$modeIcon} {$mode}: {$dzdBalance} DZD");
-                    
+
                 } catch (\Exception $e) {
-                    $this->line("   {$mode}: ❌ Error: " . $e->getMessage());
+                    $this->line("   {$mode}: ❌ Error: ".$e->getMessage());
                 }
             }
-            
+
             $this->line('');
         }
 
         $this->line('📊 Summary:');
         $this->line("   🧪 Total Test: {$totalTestDZD} DZD");
         $this->line("   🔴 Total Live: {$totalLiveDZD} DZD");
-        $this->line("   💰 Grand Total: " . ($totalTestDZD + $totalLiveDZD) . " DZD");
+        $this->line('   💰 Grand Total: '.($totalTestDZD + $totalLiveDZD).' DZD');
 
         return 0;
     }
@@ -122,7 +125,7 @@ class BalanceCommand extends Command
     protected function displayHeader(string $appName, string $mode): void
     {
         $modeDisplay = $mode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE';
-        
+
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line('║                     Account Balance                         ║');
@@ -154,9 +157,9 @@ class BalanceCommand extends Command
 
         $cacheStatus = $fresh ? '(fresh)' : '(may be cached)';
         $this->line('');
-        $this->line("Environment: " . ($balance['livemode'] ? 'Live' : 'Test') . " {$cacheStatus}");
-        
-        if (!$fresh) {
+        $this->line('Environment: '.($balance['livemode'] ? 'Live' : 'Test')." {$cacheStatus}");
+
+        if (! $fresh) {
             $this->line('💡 Use --fresh to get real-time balance');
         }
     }
@@ -164,11 +167,11 @@ class BalanceCommand extends Command
     protected function waitForUser(): void
     {
         // Only wait if we're in an interactive environment and this might be called from menu
-        if ($this->input->isInteractive() && !$this->option('fresh') && !$this->option('all')) {
+        if ($this->input->isInteractive() && ! $this->option('fresh') && ! $this->option('all')) {
             $this->line('');
             $this->info('Press any key to continue...');
             $this->line('');
-            
+
             // Simple way to wait for user input
             fgets(STDIN);
         }
@@ -177,34 +180,34 @@ class BalanceCommand extends Command
     protected function checkNoValidApps(): bool
     {
         $apps = $this->config->getApplications();
-        
+
         if (empty($apps)) {
             return true;
         }
-        
+
         // Check if any app has at least one valid API key
         foreach ($apps as $appId => $appConfig) {
             $testKey = $appConfig['test']['api_key'] ?? null;
             $liveKey = $appConfig['live']['api_key'] ?? null;
-            
+
             // An app is valid if it has at least one non-null API key
-            if (!empty($testKey) || !empty($liveKey)) {
+            if (! empty($testKey) || ! empty($liveKey)) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     protected function showWizardWithDelay(): int
     {
         $this->line('');
         $this->warn('⚠️  No valid applications found!');
         $this->line('Setting up your first application...');
-        
+
         // Add delay before showing wizard
         sleep(2);
-        
+
         // Call the main menu command to show wizard
         return $this->call('menu');
     }

@@ -2,14 +2,14 @@
 
 namespace App\Commands;
 
+use App\Exceptions\ChargilyApiException;
 use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
-use App\Exceptions\ChargilyApiException;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
 
 class PaymentCreateCommand extends Command
 {
@@ -23,6 +23,7 @@ class PaymentCreateCommand extends Command
     protected $description = 'Create a new payment checkout';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -38,7 +39,7 @@ class PaymentCreateCommand extends Command
         if ($this->checkNoValidApps()) {
             return $this->showWizardWithDelay();
         }
-        
+
         $currentApp = $this->config->getCurrentApplication();
         $currentMode = $this->config->getCurrentMode();
         $app = $this->config->getApplication($currentApp);
@@ -49,9 +50,10 @@ class PaymentCreateCommand extends Command
         if ($currentMode === 'live') {
             $this->warn('⚠️  You are in LIVE MODE - Real money will be processed!');
             $this->line('');
-            
-            if (!confirm('Continue with live payment creation?', false)) {
+
+            if (! confirm('Continue with live payment creation?', false)) {
                 $this->info('Payment creation cancelled.');
+
                 return 0;
             }
         }
@@ -62,10 +64,11 @@ class PaymentCreateCommand extends Command
         $description = $this->getPaymentDescription();
         $successUrl = $this->getSuccessUrl($currentApp, $currentMode);
         $failureUrl = $this->getFailureUrl($currentApp, $currentMode);
-        
+
         // Check if any operation was cancelled
         if ($amount === null || $successUrl === null || $failureUrl === null) {
             $this->info('Payment creation cancelled.');
+
             return 0;
         }
 
@@ -73,12 +76,14 @@ class PaymentCreateCommand extends Command
         $this->displayPaymentPreview($amount, $currency, $description, $successUrl, $failureUrl, $currentMode);
 
         try {
-            if (!confirm('Create this payment? (Press Ctrl+C to cancel)', true)) {
+            if (! confirm('Create this payment? (Press Ctrl+C to cancel)', true)) {
                 $this->info('Payment creation cancelled.');
+
                 return 0;
             }
         } catch (\Exception $e) {
             $this->info('Payment creation cancelled.');
+
             return 0;
         }
 
@@ -95,7 +100,7 @@ class PaymentCreateCommand extends Command
     protected function displayHeader(string $appName, string $mode): void
     {
         $modeDisplay = $mode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE';
-        
+
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line('║                    Create Payment                           ║');
@@ -114,6 +119,7 @@ class PaymentCreateCommand extends Command
                 $this->error('Amount must be at least 50 DZD (API requirement)');
                 exit(1);
             }
+
             return $amount;
         }
 
@@ -151,13 +157,13 @@ class PaymentCreateCommand extends Command
     {
         if ($this->option('success-url')) {
             $url = $this->option('success-url');
-            
+
             // Validate command-line provided URL
-            if (!filter_var($url, FILTER_VALIDATE_URL) || (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://'))) {
+            if (! filter_var($url, FILTER_VALIDATE_URL) || (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://'))) {
                 $this->error('❌ Invalid success URL: Must be a valid URL starting with http:// or https://');
                 exit(1);
             }
-            
+
             return $url;
         }
 
@@ -183,13 +189,13 @@ class PaymentCreateCommand extends Command
     {
         if ($this->option('failure-url')) {
             $url = $this->option('failure-url');
-            
+
             // Validate command-line provided URL
-            if (!empty($url) && (!filter_var($url, FILTER_VALIDATE_URL) || (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')))) {
+            if (! empty($url) && (! filter_var($url, FILTER_VALIDATE_URL) || (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')))) {
                 $this->error('❌ Invalid failure URL: Must be a valid URL starting with http:// or https://');
                 exit(1);
             }
-            
+
             return $url ?: 'https://example.com/payment/failed';
         }
 
@@ -197,7 +203,7 @@ class PaymentCreateCommand extends Command
         $defaultUrl = $app[$mode]['default_failure_url'] ?? '';
 
         // If no default URL is set and we're in non-interactive mode, provide a fallback
-        if (empty($defaultUrl) && !$this->input->isInteractive()) {
+        if (empty($defaultUrl) && ! $this->input->isInteractive()) {
             return 'https://example.com/payment/failed';
         }
 
@@ -222,19 +228,19 @@ class PaymentCreateCommand extends Command
         $this->line('║                     Payment Preview                          ║');
         $this->line('╚═══════════════════════════════════════════════════════════════╝');
         $this->line('');
-        
+
         if ($mode === 'live') {
             $this->line('🔴 MODE: LIVE - REAL MONEY TRANSACTION');
         } else {
             $this->line('🧪 MODE: TEST - SAFE SIMULATION');
         }
-        
-        $this->line("💰 Amount: " . number_format($amount) . " " . strtoupper($currency));
-        
+
+        $this->line('💰 Amount: '.number_format($amount).' '.strtoupper($currency));
+
         if ($description) {
             $this->line("📝 Description: {$description}");
         }
-        
+
         $this->line("✅ Success URL: {$successUrl}");
         $this->line("❌ Failure URL: {$failureUrl}");
         $this->line('');
@@ -245,25 +251,26 @@ class PaymentCreateCommand extends Command
         try {
             $currentApp = $this->config->getCurrentApplication();
             $currentMode = $this->config->getCurrentMode();
-            
+
             $this->line('⏳ Creating payment...');
-            
+
             $result = $this->api
                 ->setApplication($currentApp)
                 ->setMode($currentMode)
                 ->createCheckout($data);
-            
+
             $this->line('');
             $this->info('✅ Payment created successfully!');
             $this->line('');
-            
+
             $this->displayPaymentResult($result);
-            
+
             return 0;
-            
+
         } catch (ChargilyApiException $e) {
-            $this->error('❌ Payment creation failed: ' . $e->getUserMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('❌ Payment creation failed: '.$e->getUserMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -274,58 +281,55 @@ class PaymentCreateCommand extends Command
         $this->line('║                     Payment Details                          ║');
         $this->line('╚═══════════════════════════════════════════════════════════════╗');
         $this->line('');
-        
+
         $this->line("🆔 Checkout ID: {$payment['id']}");
-        $this->line("💰 Amount: " . number_format($payment['amount']) . " " . strtoupper($payment['currency']));
-        $this->line("📊 Status: " . ucfirst($payment['status']));
+        $this->line('💰 Amount: '.number_format($payment['amount']).' '.strtoupper($payment['currency']));
+        $this->line('📊 Status: '.ucfirst($payment['status']));
         $this->line("🔗 Payment URL: {$payment['checkout_url']}");
-        
+
         if (isset($payment['description']) && $payment['description']) {
             $this->line("📝 Description: {$payment['description']}");
         }
-        
+
         $this->line('');
         $this->line('🔗 Share this URL with your customer to complete the payment:');
         $this->line("<fg=yellow>{$payment['checkout_url']}</>");
         $this->line('');
         $this->line('💡 Payment expires automatically after 30 minutes');
-        $this->line('💡 Use: chargily payment:status ' . $payment['id'] . ' to check status');
+        $this->line('💡 Use: chargily payment:status '.$payment['id'].' to check status');
     }
-
-
-
 
     protected function checkNoValidApps(): bool
     {
         $apps = $this->config->getApplications();
-        
+
         if (empty($apps)) {
             return true;
         }
-        
+
         // Check if any app has at least one valid API key
         foreach ($apps as $appId => $appConfig) {
             $testKey = $appConfig['test']['api_key'] ?? null;
             $liveKey = $appConfig['live']['api_key'] ?? null;
-            
+
             // An app is valid if it has at least one non-null API key
-            if (!empty($testKey) || !empty($liveKey)) {
+            if (! empty($testKey) || ! empty($liveKey)) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     protected function showWizardWithDelay(): int
     {
         $this->line('');
         $this->warn('⚠️  No valid applications found!');
         $this->line('Setting up your first application...');
-        
+
         // Add delay before showing wizard
         sleep(2);
-        
+
         // Call the main menu command to show wizard
         return $this->call('menu');
     }

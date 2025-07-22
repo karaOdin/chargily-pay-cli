@@ -6,15 +6,18 @@ use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
-use function Laravel\Prompts\select;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
 
 class ModeSwitchCommand extends Command
 {
     protected $signature = 'mode:switch {--app= : Switch mode for specific application}';
+
     protected $description = 'Switch between test and live modes';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -34,7 +37,7 @@ class ModeSwitchCommand extends Command
         $this->line('🔄 Mode Switch');
         $this->line('');
         $this->line("Application: {$app['name']}");
-        $this->line("Current Mode: " . ($currentMode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE'));
+        $this->line('Current Mode: '.($currentMode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE'));
         $this->line('');
 
         $newMode = select(
@@ -48,6 +51,7 @@ class ModeSwitchCommand extends Command
 
         if ($newMode === $currentMode) {
             $this->info('Already in that mode.');
+
             return 0;
         }
 
@@ -56,17 +60,19 @@ class ModeSwitchCommand extends Command
             $this->warn('⚠️  You are switching to LIVE MODE!');
             $this->line('Real money transactions will be processed.');
             $this->line('');
-            
-            if (!confirm('Are you sure you want to switch to live mode?', false)) {
+
+            if (! confirm('Are you sure you want to switch to live mode?', false)) {
                 $this->info('Mode switch cancelled.');
+
                 return 0;
             }
 
             // Check if live API key is configured
             $liveKey = $this->config->getApiKey($appId, 'live');
-            if (!$liveKey) {
+            if (! $liveKey) {
                 $this->error('❌ No live mode API key configured!');
-                $this->line('💡 Run: chargily configure --app=' . $appId);
+                $this->line('💡 Run: chargily configure --app='.$appId);
+
                 return 1;
             }
         }
@@ -79,20 +85,20 @@ class ModeSwitchCommand extends Command
         // Test connection in new mode
         $this->line('');
         $this->line('🧪 Testing connection in new mode...');
-        
+
         try {
             $result = $this->api->setApplication($appId)->setMode($newMode)->testConnection();
-            
+
             if ($result['success']) {
                 $this->info('✅ Connection successful!');
                 $balance = $result['data']['wallets'][0]['balance'] ?? 0;
                 $this->line("💰 Balance: {$balance} DZD");
             } else {
-                $this->error('❌ Connection failed: ' . $result['message']);
+                $this->error('❌ Connection failed: '.$result['message']);
                 $this->line('💡 Check your API key configuration');
             }
         } catch (\Exception $e) {
-            $this->error('❌ Connection test failed: ' . $e->getMessage());
+            $this->error('❌ Connection test failed: '.$e->getMessage());
         }
 
         return 0;

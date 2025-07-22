@@ -3,25 +3,26 @@
 namespace App\Services;
 
 use App\Exceptions\ChargilyApiException;
-use App\Services\ConfigurationService;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ChargilyApiService
 {
     protected ConfigurationService $config;
+
     protected ?string $currentApplication = null;
+
     protected ?string $currentMode = null;
 
     public function __construct(ConfigurationService $config)
     {
         $this->config = $config;
         $this->currentApplication = $config->getCurrentApplication();
-        
+
         // Only set mode if we have a valid application
-        if (!empty($this->currentApplication)) {
+        if (! empty($this->currentApplication)) {
             $this->currentMode = $config->getCurrentMode();
         } else {
             $this->currentMode = 'test'; // Default to test mode
@@ -35,6 +36,7 @@ class ChargilyApiService
     {
         $this->currentApplication = $application;
         $this->currentMode = $this->config->getCurrentMode($application);
+
         return $this;
     }
 
@@ -44,6 +46,7 @@ class ChargilyApiService
     public function setMode(string $mode): self
     {
         $this->currentMode = $mode;
+
         return $this;
     }
 
@@ -65,12 +68,12 @@ class ChargilyApiService
     {
         $apiKey = $this->config->getApiKey($this->currentApplication, $this->currentMode);
         $baseUrl = $this->config->getBaseUrl($this->currentMode);
-        
-        if (!$apiKey) {
+
+        if (! $apiKey) {
             throw new ChargilyApiException("No API key configured for {$this->currentApplication} in {$this->currentMode} mode");
         }
 
-        $url = rtrim($baseUrl, '/') . '/' . ltrim($endpoint, '/');
+        $url = rtrim($baseUrl, '/').'/'.ltrim($endpoint, '/');
 
         if (config('chargily.logging.log_api_requests')) {
             Log::info('Chargily API Request', [
@@ -98,7 +101,7 @@ class ChargilyApiService
             ]);
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $this->handleApiError($response);
         }
 
@@ -131,8 +134,8 @@ class ChargilyApiService
     public function getBalance(bool $fresh = false): array
     {
         $cacheKey = "chargily.balance.{$this->currentApplication}.{$this->currentMode}";
-        
-        if (!$fresh && Cache::has($cacheKey)) {
+
+        if (! $fresh && Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
 
@@ -141,7 +144,7 @@ class ChargilyApiService
 
         // Cache the balance
         Cache::put($cacheKey, $balance, config('chargily.cache.balance_ttl'));
-        
+
         // Update configuration with cached balance
         $this->config->updateBalanceCache($this->currentApplication, $this->currentMode, $balance);
 
@@ -154,6 +157,7 @@ class ChargilyApiService
     public function createCustomer(array $data): array
     {
         $response = $this->makeRequest('POST', '/customers', $data);
+
         return $response->json();
     }
 
@@ -163,6 +167,7 @@ class ChargilyApiService
     public function updateCustomer(string $customerId, array $data): array
     {
         $response = $this->makeRequest('POST', "/customers/{$customerId}", $data);
+
         return $response->json();
     }
 
@@ -172,6 +177,7 @@ class ChargilyApiService
     public function getCustomer(string $customerId): array
     {
         $response = $this->makeRequest('GET', "/customers/{$customerId}");
+
         return $response->json();
     }
 
@@ -181,6 +187,7 @@ class ChargilyApiService
     public function listCustomers(int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/customers?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -190,6 +197,7 @@ class ChargilyApiService
     public function deleteCustomer(string $customerId): array
     {
         $response = $this->makeRequest('DELETE', "/customers/{$customerId}");
+
         return $response->json();
     }
 
@@ -199,6 +207,7 @@ class ChargilyApiService
     public function createProduct(array $data): array
     {
         $response = $this->makeRequest('POST', '/products', $data);
+
         return $response->json();
     }
 
@@ -208,6 +217,7 @@ class ChargilyApiService
     public function updateProduct(string $productId, array $data): array
     {
         $response = $this->makeRequest('POST', "/products/{$productId}", $data);
+
         return $response->json();
     }
 
@@ -217,6 +227,7 @@ class ChargilyApiService
     public function getProduct(string $productId): array
     {
         $response = $this->makeRequest('GET', "/products/{$productId}");
+
         return $response->json();
     }
 
@@ -226,6 +237,7 @@ class ChargilyApiService
     public function listProducts(int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/products?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -235,6 +247,7 @@ class ChargilyApiService
     public function deleteProduct(string $productId): array
     {
         $response = $this->makeRequest('DELETE', "/products/{$productId}");
+
         return $response->json();
     }
 
@@ -244,6 +257,7 @@ class ChargilyApiService
     public function getProductPrices(string $productId, int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/products/{$productId}/prices?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -253,6 +267,7 @@ class ChargilyApiService
     public function createPrice(array $data): array
     {
         $response = $this->makeRequest('POST', '/prices', $data);
+
         return $response->json();
     }
 
@@ -262,6 +277,7 @@ class ChargilyApiService
     public function updatePrice(string $priceId, array $data): array
     {
         $response = $this->makeRequest('POST', "/prices/{$priceId}", $data);
+
         return $response->json();
     }
 
@@ -271,6 +287,7 @@ class ChargilyApiService
     public function getPrice(string $priceId): array
     {
         $response = $this->makeRequest('GET', "/prices/{$priceId}");
+
         return $response->json();
     }
 
@@ -280,6 +297,7 @@ class ChargilyApiService
     public function listPrices(int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/prices?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -289,6 +307,7 @@ class ChargilyApiService
     public function createCheckout(array $data): array
     {
         $response = $this->makeRequest('POST', '/checkouts', $data);
+
         return $response->json();
     }
 
@@ -298,6 +317,7 @@ class ChargilyApiService
     public function getCheckout(string $checkoutId): array
     {
         $response = $this->makeRequest('GET', "/checkouts/{$checkoutId}");
+
         return $response->json();
     }
 
@@ -307,6 +327,7 @@ class ChargilyApiService
     public function listCheckouts(int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/checkouts?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -316,6 +337,7 @@ class ChargilyApiService
     public function getCheckoutItems(string $checkoutId, int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/checkouts/{$checkoutId}/items?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -325,6 +347,7 @@ class ChargilyApiService
     public function expireCheckout(string $checkoutId): array
     {
         $response = $this->makeRequest('POST', "/checkouts/{$checkoutId}/expire");
+
         return $response->json();
     }
 
@@ -334,6 +357,7 @@ class ChargilyApiService
     public function createPaymentLink(array $data): array
     {
         $response = $this->makeRequest('POST', '/payment-links', $data);
+
         return $response->json();
     }
 
@@ -343,6 +367,7 @@ class ChargilyApiService
     public function updatePaymentLink(string $paymentLinkId, array $data): array
     {
         $response = $this->makeRequest('POST', "/payment-links/{$paymentLinkId}", $data);
+
         return $response->json();
     }
 
@@ -352,6 +377,7 @@ class ChargilyApiService
     public function getPaymentLink(string $paymentLinkId): array
     {
         $response = $this->makeRequest('GET', "/payment-links/{$paymentLinkId}");
+
         return $response->json();
     }
 
@@ -361,6 +387,7 @@ class ChargilyApiService
     public function listPaymentLinks(int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/payment-links?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -370,6 +397,7 @@ class ChargilyApiService
     public function getPaymentLinkItems(string $paymentLinkId, int $perPage = 10): array
     {
         $response = $this->makeRequest('GET', "/payment-links/{$paymentLinkId}/items?per_page={$perPage}");
+
         return $response->json();
     }
 
@@ -379,30 +407,31 @@ class ChargilyApiService
     public function getCheckouts(array $filters = []): array
     {
         $queryParams = [];
-        
+
         if (isset($filters['per_page'])) {
             $queryParams['per_page'] = $filters['per_page'];
         }
-        
+
         if (isset($filters['status'])) {
             $queryParams['status'] = $filters['status'];
         }
-        
+
         if (isset($filters['customer_id'])) {
             $queryParams['customer_id'] = $filters['customer_id'];
         }
-        
+
         if (isset($filters['created_at_from'])) {
             $queryParams['created_at_from'] = $filters['created_at_from'];
         }
-        
+
         if (isset($filters['created_at_to'])) {
             $queryParams['created_at_to'] = $filters['created_at_to'];
         }
 
-        $query = empty($queryParams) ? '' : '?' . http_build_query($queryParams);
-        
+        $query = empty($queryParams) ? '' : '?'.http_build_query($queryParams);
+
         $response = $this->makeRequest('GET', "/checkouts{$query}");
+
         return $response->json();
     }
 
@@ -412,18 +441,19 @@ class ChargilyApiService
     public function getCustomers(array $filters = []): array
     {
         $queryParams = [];
-        
+
         if (isset($filters['per_page'])) {
             $queryParams['per_page'] = $filters['per_page'];
         }
-        
+
         if (isset($filters['search'])) {
             $queryParams['search'] = $filters['search'];
         }
 
-        $query = empty($queryParams) ? '' : '?' . http_build_query($queryParams);
-        
+        $query = empty($queryParams) ? '' : '?'.http_build_query($queryParams);
+
         $response = $this->makeRequest('GET', "/customers{$query}");
+
         return $response->json();
     }
 
@@ -433,18 +463,19 @@ class ChargilyApiService
     public function getProducts(array $filters = []): array
     {
         $queryParams = [];
-        
+
         if (isset($filters['per_page'])) {
             $queryParams['per_page'] = $filters['per_page'];
         }
-        
+
         if (isset($filters['active'])) {
             $queryParams['active'] = $filters['active'] ? 'true' : 'false';
         }
 
-        $query = empty($queryParams) ? '' : '?' . http_build_query($queryParams);
-        
+        $query = empty($queryParams) ? '' : '?'.http_build_query($queryParams);
+
         $response = $this->makeRequest('GET', "/products{$query}");
+
         return $response->json();
     }
 
@@ -454,22 +485,23 @@ class ChargilyApiService
     public function getPrices(array $filters = []): array
     {
         $queryParams = [];
-        
+
         if (isset($filters['per_page'])) {
             $queryParams['per_page'] = $filters['per_page'];
         }
-        
+
         if (isset($filters['active'])) {
             $queryParams['active'] = $filters['active'] ? 'true' : 'false';
         }
-        
+
         if (isset($filters['product_id'])) {
             $queryParams['product_id'] = $filters['product_id'];
         }
 
-        $query = empty($queryParams) ? '' : '?' . http_build_query($queryParams);
-        
+        $query = empty($queryParams) ? '' : '?'.http_build_query($queryParams);
+
         $response = $this->makeRequest('GET', "/prices{$query}");
+
         return $response->json();
     }
 
@@ -479,18 +511,19 @@ class ChargilyApiService
     public function getPaymentLinks(array $filters = []): array
     {
         $queryParams = [];
-        
+
         if (isset($filters['per_page'])) {
             $queryParams['per_page'] = $filters['per_page'];
         }
-        
+
         if (isset($filters['active'])) {
             $queryParams['active'] = $filters['active'] ? 'true' : 'false';
         }
 
-        $query = empty($queryParams) ? '' : '?' . http_build_query($queryParams);
-        
+        $query = empty($queryParams) ? '' : '?'.http_build_query($queryParams);
+
         $response = $this->makeRequest('GET', "/payment-links{$query}");
+
         return $response->json();
     }
 
@@ -500,6 +533,7 @@ class ChargilyApiService
     public function deletePrice(string $priceId): array
     {
         $response = $this->makeRequest('DELETE', "/prices/{$priceId}");
+
         return $response->json();
     }
 
@@ -509,6 +543,7 @@ class ChargilyApiService
     public function deletePaymentLink(string $paymentLinkId): array
     {
         $response = $this->makeRequest('DELETE', "/payment-links/{$paymentLinkId}");
+
         return $response->json();
     }
 
@@ -518,6 +553,7 @@ class ChargilyApiService
     public function getPaymentLinkAnalytics(string $paymentLinkId): array
     {
         $response = $this->makeRequest('GET', "/payment-links/{$paymentLinkId}/analytics");
+
         return $response->json();
     }
 
@@ -528,6 +564,7 @@ class ChargilyApiService
     {
         try {
             $balance = $this->getBalance(true);
+
             return [
                 'success' => true,
                 'message' => 'API connection successful',

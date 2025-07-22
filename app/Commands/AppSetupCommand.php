@@ -2,14 +2,14 @@
 
 namespace App\Commands;
 
+use App\Exceptions\ChargilyApiException;
 use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
-use App\Exceptions\ChargilyApiException;
-use LaravelZero\Framework\Commands\Command;
 use Illuminate\Console\Scheduling\Schedule;
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
+use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
 
 class AppSetupCommand extends Command
 {
@@ -38,22 +38,22 @@ class AppSetupCommand extends Command
 
         // Get API credentials
         $testApiKey = $this->getApiKey('test');
-        if (!$testApiKey) {
+        if (! $testApiKey) {
             return 1;
         }
 
         $liveApiKey = $this->getApiKey('live');
-        if (!$liveApiKey) {
+        if (! $liveApiKey) {
             return 1;
         }
 
         // Test the API keys
-        if (!$this->testApiKeys($testApiKey, $liveApiKey)) {
+        if (! $this->testApiKeys($testApiKey, $liveApiKey)) {
             return 1;
         }
 
         // Create the application configuration
-        if (!$this->createApplication($testApiKey, $liveApiKey)) {
+        if (! $this->createApplication($testApiKey, $liveApiKey)) {
             return 1;
         }
 
@@ -96,6 +96,7 @@ class AppSetupCommand extends Command
         }
 
         $this->error('❌ Maximum attempts exceeded. Setup cancelled.');
+
         return null;
     }
 
@@ -105,12 +106,12 @@ class AppSetupCommand extends Command
         $this->line('');
 
         // Test the test key
-        if (!$this->testSingleApiKey($testKey, 'test')) {
+        if (! $this->testSingleApiKey($testKey, 'test')) {
             return false;
         }
 
         // Test the live key
-        if (!$this->testSingleApiKey($liveKey, 'live')) {
+        if (! $this->testSingleApiKey($liveKey, 'live')) {
             return false;
         }
 
@@ -136,6 +137,7 @@ class AppSetupCommand extends Command
             $this->config->deleteApplication($tempAppId);
 
             $this->info("✅ {$modeDisplay} API key is valid");
+
             return true;
 
         } catch (ChargilyApiException $e) {
@@ -190,10 +192,12 @@ class AppSetupCommand extends Command
             $this->config->setCurrentMode($appId, 'test'); // Start in test mode
 
             $this->info("✅ Application '{$appName}' created successfully");
+
             return true;
 
         } catch (\Exception $e) {
-            $this->error('❌ Failed to create application: ' . $e->getMessage());
+            $this->error('❌ Failed to create application: '.$e->getMessage());
+
             return false;
         }
     }

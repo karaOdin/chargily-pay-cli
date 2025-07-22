@@ -12,21 +12,21 @@ class ConfigurationService
     protected string $currentApplication;
 
     protected string $configPath;
-    
+
     protected string $configDir;
 
     public function __construct()
     {
         // Use user's home directory for config storage, compatible with PHAR
         $homeDir = $_SERVER['HOME'] ?? $_SERVER['USERPROFILE'] ?? getcwd();
-        $this->configDir = $homeDir . DIRECTORY_SEPARATOR . '.chargily';
-        
+        $this->configDir = $homeDir.DIRECTORY_SEPARATOR.'.chargily';
+
         // Create config directory if it doesn't exist
-        if (!is_dir($this->configDir)) {
+        if (! is_dir($this->configDir)) {
             @mkdir($this->configDir, 0755, true);
         }
-        
-        $this->configPath = $this->configDir . DIRECTORY_SEPARATOR . 'applications.json';
+
+        $this->configPath = $this->configDir.DIRECTORY_SEPARATOR.'applications.json';
         $this->loadApplications();
         $this->setDefaultApplication();
     }
@@ -44,7 +44,7 @@ class ConfigurationService
      */
     public function getConfigPath(string $filename): string
     {
-        return $this->configDir . DIRECTORY_SEPARATOR . $filename;
+        return $this->configDir.DIRECTORY_SEPARATOR.$filename;
     }
 
     protected function setDefaultApplication(): void
@@ -52,9 +52,9 @@ class ConfigurationService
         $defaultApp = config('chargily.default_application');
 
         // If the configured default doesn't exist, use first available app or empty string
-        if (!$this->applicationExists($defaultApp)) {
+        if (! $this->applicationExists($defaultApp)) {
             $availableApps = array_keys($this->applications);
-            $this->currentApplication = !empty($availableApps) ? $availableApps[0] : '';
+            $this->currentApplication = ! empty($availableApps) ? $availableApps[0] : '';
         } else {
             $this->currentApplication = $defaultApp;
         }
@@ -111,7 +111,7 @@ class ConfigurationService
      */
     public function getApplication(string $application): array
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -160,7 +160,7 @@ class ConfigurationService
      */
     public function updateApplication(string $application, array $updates): void
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -177,7 +177,7 @@ class ConfigurationService
      */
     public function deleteApplication(string $application): void
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -197,7 +197,7 @@ class ConfigurationService
 
     protected function clearApplicationCache(string $application): void
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             return;
         }
 
@@ -208,7 +208,7 @@ class ConfigurationService
         $this->applications[$application]['live']['last_balance_check'] = null;
 
         // Clear any payment cache files related to this app
-        $cacheFiles = glob($this->getConfigPath('payments_export_' . $application . '_*.csv'));
+        $cacheFiles = glob($this->getConfigPath('payments_export_'.$application.'_*.csv'));
         foreach ($cacheFiles as $file) {
             if (File::exists($file)) {
                 File::delete($file);
@@ -221,7 +221,7 @@ class ConfigurationService
      */
     public function cloneApplication(string $sourceApp, string $newAppId, string $newAppName): void
     {
-        if (!$this->applicationExists($sourceApp)) {
+        if (! $this->applicationExists($sourceApp)) {
             throw new ConfigurationException("Source application '{$sourceApp}' does not exist");
         }
 
@@ -258,7 +258,7 @@ class ConfigurationService
      */
     public function setCurrentApplication(string $application): void
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -282,7 +282,7 @@ class ConfigurationService
         }
 
         // Handle case when no application is set
-        if (empty($app) || !$this->applicationExists($app)) {
+        if (empty($app) || ! $this->applicationExists($app)) {
             return 'test'; // Default to test mode
         }
 
@@ -294,11 +294,11 @@ class ConfigurationService
      */
     public function setCurrentMode(string $application, string $mode): void
     {
-        if (!in_array($mode, ['test', 'live'])) {
+        if (! in_array($mode, ['test', 'live'])) {
             throw new ConfigurationException("Invalid mode '{$mode}'. Must be 'test' or 'live'");
         }
 
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -312,6 +312,7 @@ class ConfigurationService
     public function getApiKey(string $application, string $mode): ?string
     {
         $app = $this->getApplication($application);
+
         return $app[$mode]['api_key'] ?? null;
     }
 
@@ -320,7 +321,7 @@ class ConfigurationService
      */
     public function setApiKey(string $application, string $mode, string $apiKey): void
     {
-        if (!$this->applicationExists($application)) {
+        if (! $this->applicationExists($application)) {
             throw new ConfigurationException("Application '{$application}' does not exist");
         }
 
@@ -388,7 +389,7 @@ class ConfigurationService
     {
         $templates = $this->getTemplates();
 
-        if (!isset($templates[$templateId])) {
+        if (! isset($templates[$templateId])) {
             throw new ConfigurationException("Template '{$templateId}' does not exist");
         }
 
@@ -442,10 +443,10 @@ class ConfigurationService
             'current_mode' => $app['current_mode'],
             'created_at' => $app['created_at'],
             'last_used' => $app['last_used'],
-            'has_test_key' => !empty($app['test']['api_key']),
-            'has_live_key' => !empty($app['live']['api_key']),
-            'test_balance_cached' => !empty($app['test']['balance_cache']),
-            'live_balance_cached' => !empty($app['live']['balance_cache']),
+            'has_test_key' => ! empty($app['test']['api_key']),
+            'has_live_key' => ! empty($app['live']['api_key']),
+            'test_balance_cached' => ! empty($app['test']['balance_cache']),
+            'live_balance_cached' => ! empty($app['live']['balance_cache']),
             'last_balance_check' => [
                 'test' => $app['test']['last_balance_check'],
                 'live' => $app['live']['last_balance_check'],

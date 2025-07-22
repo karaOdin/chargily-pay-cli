@@ -2,21 +2,24 @@
 
 namespace App\Commands;
 
+use App\Exceptions\ChargilyApiException;
 use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
-use App\Exceptions\ChargilyApiException;
-use LaravelZero\Framework\Commands\Command;
 use Illuminate\Console\Scheduling\Schedule;
+use LaravelZero\Framework\Commands\Command;
+
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
-use function Laravel\Prompts\confirm;
 
 class ProductManageCommand extends Command
 {
     protected $signature = 'product:manage';
+
     protected $description = 'Comprehensive product and price management';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -45,7 +48,7 @@ class ProductManageCommand extends Command
                     [
                         'products' => '📦 Products',
                         'prices' => '💰 Prices',
-                        'exit' => '↩️ Back to Main Menu'
+                        'exit' => '↩️ Back to Main Menu',
                     ]
                 );
 
@@ -54,14 +57,14 @@ class ProductManageCommand extends Command
                     'prices' => $this->managePrices(),
                     'exit' => null
                 };
-                
+
                 if ($category === 'exit') {
                     break;
                 }
 
                 if ($category !== 'exit') {
                     $this->line('');
-                    if (!confirm('Continue with product management?', true)) {
+                    if (! confirm('Continue with product management?', true)) {
                         break;
                     }
                     $this->line('');
@@ -71,8 +74,9 @@ class ProductManageCommand extends Command
             return 0;
 
         } catch (ChargilyApiException $e) {
-            $this->error('❌ Product operation failed: ' . $e->getUserMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('❌ Product operation failed: '.$e->getUserMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -80,7 +84,7 @@ class ProductManageCommand extends Command
     protected function displayHeader(string $appName, string $mode): void
     {
         $modeDisplay = $mode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE';
-        
+
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line('║                Product & Price Management                   ║');
@@ -103,7 +107,7 @@ class ProductManageCommand extends Command
                     'delete' => '🗑️ Delete Product',
                     'view' => '👁️ View Product Details',
                     'export' => '📤 Export Products',
-                    'back' => '↩️ Back'
+                    'back' => '↩️ Back',
                 ]
             );
 
@@ -116,14 +120,14 @@ class ProductManageCommand extends Command
                 'export' => $this->exportProducts(),
                 'back' => null
             };
-            
+
             if ($action === 'back') {
                 break;
             }
 
             if ($action !== 'back') {
                 $this->line('');
-                if (!confirm('Continue with product operations?', true)) {
+                if (! confirm('Continue with product operations?', true)) {
                     break;
                 }
                 $this->line('');
@@ -143,7 +147,7 @@ class ProductManageCommand extends Command
                     'delete' => '🗑️ Delete Price',
                     'view' => '👁️ View Price Details',
                     'bulk' => '📊 Bulk Price Operations',
-                    'back' => '↩️ Back'
+                    'back' => '↩️ Back',
                 ]
             );
 
@@ -156,14 +160,14 @@ class ProductManageCommand extends Command
                 'bulk' => $this->bulkPriceOperations(),
                 'back' => null
             };
-            
+
             if ($action === 'back') {
                 break;
             }
 
             if ($action !== 'back') {
                 $this->line('');
-                if (!confirm('Continue with price operations?', true)) {
+                if (! confirm('Continue with price operations?', true)) {
                     break;
                 }
                 $this->line('');
@@ -182,11 +186,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching products...');
-        
+
         $products = $this->api->getProducts(['per_page' => $limit]);
 
         if (empty($products['data'])) {
             $this->info('📭 No products found.');
+
             return;
         }
 
@@ -197,17 +202,17 @@ class ProductManageCommand extends Command
         $headers = ['ID', 'Name', 'Description', 'Status', 'Prices', 'Created'];
         $rows = array_map(function ($product) {
             return [
-                substr($product['id'], 0, 8) . '...',
+                substr($product['id'], 0, 8).'...',
                 $product['name'],
                 substr($product['description'] ?? 'N/A', 0, 30),
                 $product['active'] ? '✅ Active' : '❌ Inactive',
                 count($product['prices'] ?? []),
-                $this->formatDate($product['created_at'])
+                $this->formatDate($product['created_at']),
             ];
         }, $products['data']);
 
         $this->table($headers, $rows);
-        $this->line("💡 Showing " . count($products['data']) . " products");
+        $this->line('💡 Showing '.count($products['data']).' products');
     }
 
     protected function createProduct(): void
@@ -233,8 +238,8 @@ class ProductManageCommand extends Command
                 $imageUrl = text(
                     'Image URL',
                     placeholder: 'https://example.com/product-image.jpg',
-                    validate: fn ($value) => filter_var($value, FILTER_VALIDATE_URL) 
-                        ? null 
+                    validate: fn ($value) => filter_var($value, FILTER_VALIDATE_URL)
+                        ? null
                         : 'Please enter a valid URL'
                 );
                 $images[] = $imageUrl;
@@ -262,19 +267,22 @@ class ProductManageCommand extends Command
         $this->line('📋 Product Preview');
         $this->line(str_repeat('─', 40));
         $this->line("Name: {$name}");
-        if ($description) $this->line("Description: {$description}");
-        if (!empty($images)) {
-            $this->line("Images: " . count($images) . " image(s)");
+        if ($description) {
+            $this->line("Description: {$description}");
+        }
+        if (! empty($images)) {
+            $this->line('Images: '.count($images).' image(s)');
             foreach ($images as $i => $image) {
-                $this->line("  " . ($i + 1) . ". {$image}");
+                $this->line('  '.($i + 1).". {$image}");
             }
         }
-        if (!empty($metadata)) {
-            $this->line("Metadata: " . json_encode($metadata, JSON_PRETTY_PRINT));
+        if (! empty($metadata)) {
+            $this->line('Metadata: '.json_encode($metadata, JSON_PRETTY_PRINT));
         }
 
-        if (!confirm('Create this product?', true)) {
+        if (! confirm('Create this product?', true)) {
             $this->info('Product creation cancelled.');
+
             return;
         }
 
@@ -284,8 +292,8 @@ class ProductManageCommand extends Command
         $this->info('✅ Product created successfully!');
         $this->line("🆔 Product ID: {$product['id']}");
         $this->line("📦 Name: {$product['name']}");
-        $this->line("📝 Description: " . ($product['description'] ?? 'N/A'));
-        
+        $this->line('📝 Description: '.($product['description'] ?? 'N/A'));
+
         if (confirm('Create a price for this product now?', true)) {
             $this->createPriceForProduct($product['id']);
         }
@@ -300,11 +308,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching product details...');
-        
+
         try {
             $product = $this->api->getProduct($productId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Product not found: {$productId}");
+
             return;
         }
 
@@ -312,8 +321,8 @@ class ProductManageCommand extends Command
         $this->line('📋 Current Product Details');
         $this->line(str_repeat('─', 40));
         $this->line("Name: {$product['name']}");
-        $this->line("Description: " . ($product['description'] ?? 'N/A'));
-        $this->line("Status: " . ($product['active'] ? 'Active' : 'Inactive'));
+        $this->line('Description: '.($product['description'] ?? 'N/A'));
+        $this->line('Status: '.($product['active'] ? 'Active' : 'Inactive'));
         $this->line('');
 
         $updateData = [];
@@ -324,25 +333,27 @@ class ProductManageCommand extends Command
 
         if (confirm('Update description?', false)) {
             $updateData['description'] = text(
-                'New description', 
+                'New description',
                 default: $product['description'] ?? ''
             );
         }
 
         if (confirm('Change active status?', false)) {
             $updateData['active'] = confirm(
-                'Should this product be active?', 
+                'Should this product be active?',
                 $product['active']
             );
         }
 
         if (empty($updateData)) {
             $this->info('No changes made.');
+
             return;
         }
 
-        if (!confirm('Save these changes?', true)) {
+        if (! confirm('Save these changes?', true)) {
             $this->info('Update cancelled.');
+
             return;
         }
 
@@ -351,8 +362,8 @@ class ProductManageCommand extends Command
 
         $this->info('✅ Product updated successfully!');
         $this->line("📦 Name: {$updatedProduct['name']}");
-        $this->line("📝 Description: " . ($updatedProduct['description'] ?? 'N/A'));
-        $this->line("Status: " . ($updatedProduct['active'] ? '✅ Active' : '❌ Inactive'));
+        $this->line('📝 Description: '.($updatedProduct['description'] ?? 'N/A'));
+        $this->line('Status: '.($updatedProduct['active'] ? '✅ Active' : '❌ Inactive'));
     }
 
     protected function deleteProduct(): void
@@ -364,11 +375,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching product details...');
-        
+
         try {
             $product = $this->api->getProduct($productId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Product not found: {$productId}");
+
             return;
         }
 
@@ -377,18 +389,20 @@ class ProductManageCommand extends Command
         $this->line('');
         $this->warn('⚠️ You are about to delete this product:');
         $this->line("📦 Name: {$product['name']}");
-        $this->line("📝 Description: " . ($product['description'] ?? 'N/A'));
+        $this->line('📝 Description: '.($product['description'] ?? 'N/A'));
         $this->line("💰 Associated Prices: {$priceCount}");
         $this->line('');
         $this->error('🚨 This will also delete all associated prices and cannot be undone!');
 
-        if (!confirm('Are you absolutely sure you want to delete this product?', false)) {
+        if (! confirm('Are you absolutely sure you want to delete this product?', false)) {
             $this->info('Deletion cancelled.');
+
             return;
         }
 
-        if (!confirm('Type "DELETE" to confirm', false)) {
+        if (! confirm('Type "DELETE" to confirm', false)) {
             $this->info('Deletion cancelled - confirmation not received.');
+
             return;
         }
 
@@ -408,11 +422,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching product details...');
-        
+
         try {
             $product = $this->api->getProduct($productId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Product not found: {$productId}");
+
             return;
         }
 
@@ -421,29 +436,29 @@ class ProductManageCommand extends Command
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line("║ ID: {$product['id']}");
         $this->line("║ Name: {$product['name']}");
-        $this->line("║ Description: " . ($product['description'] ?? 'N/A'));
-        $this->line("║ Status: " . ($product['active'] ? '✅ Active' : '❌ Inactive'));
-        $this->line("║ Created: " . $this->formatDate($product['created_at']));
-        $this->line("║ Updated: " . $this->formatDate($product['updated_at']));
+        $this->line('║ Description: '.($product['description'] ?? 'N/A'));
+        $this->line('║ Status: '.($product['active'] ? '✅ Active' : '❌ Inactive'));
+        $this->line('║ Created: '.$this->formatDate($product['created_at']));
+        $this->line('║ Updated: '.$this->formatDate($product['updated_at']));
 
-        if (!empty($product['images'])) {
-            $this->line("║ Images: " . count($product['images']));
+        if (! empty($product['images'])) {
+            $this->line('║ Images: '.count($product['images']));
             foreach ($product['images'] as $i => $image) {
-                $this->line("║   " . ($i + 1) . ". {$image}");
+                $this->line('║   '.($i + 1).". {$image}");
             }
         }
 
-        if (!empty($product['metadata'])) {
-            $this->line("║ Metadata:");
+        if (! empty($product['metadata'])) {
+            $this->line('║ Metadata:');
             foreach ($product['metadata'] as $key => $value) {
                 $this->line("║   {$key}: {$value}");
             }
         }
-        
+
         $this->line('╚══════════════════════════════════════════════════════════════╝');
 
         // Show associated prices
-        if (!empty($product['prices'])) {
+        if (! empty($product['prices'])) {
             $this->line('');
             $this->line('💰 Associated Prices');
             $this->line(str_repeat('─', 80));
@@ -451,11 +466,11 @@ class ProductManageCommand extends Command
             $headers = ['Price ID', 'Amount', 'Currency', 'Type', 'Status'];
             $rows = array_map(function ($price) {
                 return [
-                    substr($price['id'], 0, 8) . '...',
+                    substr($price['id'], 0, 8).'...',
                     number_format($price['amount'] / 100, 2),
                     strtoupper($price['currency']),
                     ucfirst($price['type'] ?? 'one_time'),
-                    $price['active'] ? '✅ Active' : '❌ Inactive'
+                    $price['active'] ? '✅ Active' : '❌ Inactive',
                 ];
             }, $product['prices']);
 
@@ -472,29 +487,30 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching products for export...');
-        
+
         $products = $this->api->getProducts(['per_page' => $limit]);
 
         if (empty($products['data'])) {
             $this->info('📭 No products found to export.');
+
             return;
         }
 
         $currentApp = $this->config->getCurrentApplication();
         $currentMode = $this->config->getCurrentMode();
-        $filename = storage_path("app/products_export_{$currentApp}_{$currentMode}_" . date('Y_m_d_H_i_s') . '.csv');
-        
+        $filename = storage_path("app/products_export_{$currentApp}_{$currentMode}_".date('Y_m_d_H_i_s').'.csv');
+
         // Ensure directory exists
-        if (!is_dir(dirname($filename))) {
+        if (! is_dir(dirname($filename))) {
             mkdir(dirname($filename), 0755, true);
         }
 
         $file = fopen($filename, 'w');
-        
+
         // CSV Headers
         fputcsv($file, [
             'ID', 'Name', 'Description', 'Active', 'Images Count', 'Prices Count',
-            'Created At', 'Updated At'
+            'Created At', 'Updated At',
         ]);
 
         // CSV Data
@@ -507,14 +523,14 @@ class ProductManageCommand extends Command
                 count($product['images'] ?? []),
                 count($product['prices'] ?? []),
                 $product['created_at'],
-                $product['updated_at']
+                $product['updated_at'],
             ]);
         }
 
         fclose($file);
 
         $this->info("✅ Products exported to: {$filename}");
-        $this->line("📁 File contains " . count($products['data']) . " product records");
+        $this->line('📁 File contains '.count($products['data']).' product records');
     }
 
     // Price Management Methods
@@ -528,11 +544,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching prices...');
-        
+
         $prices = $this->api->getPrices(['per_page' => $limit]);
 
         if (empty($prices['data'])) {
             $this->info('📭 No prices found.');
+
             return;
         }
 
@@ -543,24 +560,26 @@ class ProductManageCommand extends Command
         $headers = ['ID', 'Product', 'Amount', 'Currency', 'Type', 'Status', 'Created'];
         $rows = array_map(function ($price) {
             return [
-                substr($price['id'], 0, 8) . '...',
+                substr($price['id'], 0, 8).'...',
                 $price['product']['name'] ?? 'N/A',
                 number_format($price['amount'] / 100, 2),
                 strtoupper($price['currency']),
                 ucfirst($price['type'] ?? 'one_time'),
                 $price['active'] ? '✅ Active' : '❌ Inactive',
-                $this->formatDate($price['created_at'])
+                $this->formatDate($price['created_at']),
             ];
         }, $prices['data']);
 
         $this->table($headers, $rows);
-        $this->line("💡 Showing " . count($prices['data']) . " prices");
+        $this->line('💡 Showing '.count($prices['data']).' prices');
     }
 
     protected function createPrice(): void
     {
         $productId = $this->selectProductForPrice();
-        if (!$productId) return;
+        if (! $productId) {
+            return;
+        }
 
         $this->createPriceForProduct($productId);
     }
@@ -590,7 +609,7 @@ class ProductManageCommand extends Command
             'Price type',
             [
                 'one_time' => 'One-time payment',
-                'recurring' => 'Recurring subscription'
+                'recurring' => 'Recurring subscription',
             ],
             'one_time'
         );
@@ -603,7 +622,7 @@ class ProductManageCommand extends Command
                     'month' => 'Monthly',
                     'year' => 'Yearly',
                     'week' => 'Weekly',
-                    'day' => 'Daily'
+                    'day' => 'Daily',
                 ],
                 'month'
             );
@@ -618,7 +637,7 @@ class ProductManageCommand extends Command
 
             $intervalData = [
                 'interval' => $interval,
-                'interval_count' => $intervalCount
+                'interval_count' => $intervalCount,
             ];
         }
 
@@ -637,27 +656,28 @@ class ProductManageCommand extends Command
             'currency' => $currency,
             'type' => $type,
             'metadata' => $metadata ?: null,
-            ...$intervalData
+            ...$intervalData,
         ]);
 
         // Preview
         $this->line('');
         $this->line('💰 Price Preview');
         $this->line(str_repeat('─', 40));
-        $this->line("Amount: " . number_format($amount / 100, 2) . " " . strtoupper($currency));
-        $this->line("Type: " . ucfirst(str_replace('_', ' ', $type)));
+        $this->line('Amount: '.number_format($amount / 100, 2).' '.strtoupper($currency));
+        $this->line('Type: '.ucfirst(str_replace('_', ' ', $type)));
         if ($type === 'recurring') {
-            $intervalText = $intervalData['interval_count'] > 1 
+            $intervalText = $intervalData['interval_count'] > 1
                 ? "Every {$intervalData['interval_count']} {$intervalData['interval']}s"
                 : "Every {$intervalData['interval']}";
             $this->line("Billing: {$intervalText}");
         }
-        if (!empty($metadata)) {
-            $this->line("Metadata: " . json_encode($metadata, JSON_PRETTY_PRINT));
+        if (! empty($metadata)) {
+            $this->line('Metadata: '.json_encode($metadata, JSON_PRETTY_PRINT));
         }
 
-        if (!confirm('Create this price?', true)) {
+        if (! confirm('Create this price?', true)) {
             $this->info('Price creation cancelled.');
+
             return;
         }
 
@@ -666,24 +686,25 @@ class ProductManageCommand extends Command
 
         $this->info('✅ Price created successfully!');
         $this->line("🆔 Price ID: {$price['id']}");
-        $this->line("💰 Amount: " . number_format($price['amount'] / 100, 2) . " " . strtoupper($price['currency']));
+        $this->line('💰 Amount: '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']));
         $this->line("📦 Product: {$productId}");
     }
 
     protected function selectProductForPrice(): ?string
     {
         $this->line('⏳ Fetching available products...');
-        
+
         $products = $this->api->getProducts(['per_page' => 50, 'active' => true]);
 
         if (empty($products['data'])) {
             $this->error('❌ No active products found. Create a product first.');
+
             return null;
         }
 
         $productOptions = [];
         foreach ($products['data'] as $product) {
-            $productOptions[$product['id']] = $product['name'] . ' (ID: ' . substr($product['id'], 0, 8) . '...)';
+            $productOptions[$product['id']] = $product['name'].' (ID: '.substr($product['id'], 0, 8).'...)';
         }
 
         return select('Select a product for this price', $productOptions);
@@ -698,27 +719,28 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching price details...');
-        
+
         try {
             $price = $this->api->getPrice($priceId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Price not found: {$priceId}");
+
             return;
         }
 
         $this->line('');
         $this->line('💰 Current Price Details');
         $this->line(str_repeat('─', 40));
-        $this->line("Amount: " . number_format($price['amount'] / 100, 2) . " " . strtoupper($price['currency']));
-        $this->line("Type: " . ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
-        $this->line("Status: " . ($price['active'] ? 'Active' : 'Inactive'));
+        $this->line('Amount: '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']));
+        $this->line('Type: '.ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
+        $this->line('Status: '.($price['active'] ? 'Active' : 'Inactive'));
         $this->line('');
 
         $updateData = [];
 
         if (confirm('Change active status?', false)) {
             $updateData['active'] = confirm(
-                'Should this price be active?', 
+                'Should this price be active?',
                 $price['active']
             );
         }
@@ -735,11 +757,13 @@ class ProductManageCommand extends Command
 
         if (empty($updateData)) {
             $this->info('No changes made.');
+
             return;
         }
 
-        if (!confirm('Save these changes?', true)) {
+        if (! confirm('Save these changes?', true)) {
             $this->info('Update cancelled.');
+
             return;
         }
 
@@ -747,8 +771,8 @@ class ProductManageCommand extends Command
         $updatedPrice = $this->api->updatePrice($priceId, $updateData);
 
         $this->info('✅ Price updated successfully!');
-        $this->line("💰 Amount: " . number_format($updatedPrice['amount'] / 100, 2) . " " . strtoupper($updatedPrice['currency']));
-        $this->line("Status: " . ($updatedPrice['active'] ? '✅ Active' : '❌ Inactive'));
+        $this->line('💰 Amount: '.number_format($updatedPrice['amount'] / 100, 2).' '.strtoupper($updatedPrice['currency']));
+        $this->line('Status: '.($updatedPrice['active'] ? '✅ Active' : '❌ Inactive'));
     }
 
     protected function deletePrice(): void
@@ -760,24 +784,26 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching price details...');
-        
+
         try {
             $price = $this->api->getPrice($priceId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Price not found: {$priceId}");
+
             return;
         }
 
         $this->line('');
         $this->warn('⚠️ You are about to delete this price:');
-        $this->line("💰 Amount: " . number_format($price['amount'] / 100, 2) . " " . strtoupper($price['currency']));
-        $this->line("📦 Product: " . ($price['product']['name'] ?? 'N/A'));
-        $this->line("Type: " . ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
+        $this->line('💰 Amount: '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']));
+        $this->line('📦 Product: '.($price['product']['name'] ?? 'N/A'));
+        $this->line('Type: '.ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
         $this->line('');
         $this->error('🚨 This action cannot be undone!');
 
-        if (!confirm('Are you absolutely sure you want to delete this price?', false)) {
+        if (! confirm('Are you absolutely sure you want to delete this price?', false)) {
             $this->info('Deletion cancelled.');
+
             return;
         }
 
@@ -785,7 +811,7 @@ class ProductManageCommand extends Command
         $this->api->deletePrice($priceId);
 
         $this->info('✅ Price deleted successfully.');
-        $this->line("🗑️ Price has been removed from the product.");
+        $this->line('🗑️ Price has been removed from the product.');
     }
 
     protected function viewPrice(): void
@@ -797,11 +823,12 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching price details...');
-        
+
         try {
             $price = $this->api->getPrice($priceId);
         } catch (ChargilyApiException $e) {
             $this->error("❌ Price not found: {$priceId}");
+
             return;
         }
 
@@ -809,27 +836,27 @@ class ProductManageCommand extends Command
         $this->line('💰 Price Details');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line("║ ID: {$price['id']}");
-        $this->line("║ Amount: " . number_format($price['amount'] / 100, 2) . " " . strtoupper($price['currency']));
-        $this->line("║ Type: " . ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
-        $this->line("║ Status: " . ($price['active'] ? '✅ Active' : '❌ Inactive'));
-        $this->line("║ Product: " . ($price['product']['name'] ?? 'N/A'));
-        $this->line("║ Created: " . $this->formatDate($price['created_at']));
-        $this->line("║ Updated: " . $this->formatDate($price['updated_at']));
+        $this->line('║ Amount: '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']));
+        $this->line('║ Type: '.ucfirst(str_replace('_', ' ', $price['type'] ?? 'one_time')));
+        $this->line('║ Status: '.($price['active'] ? '✅ Active' : '❌ Inactive'));
+        $this->line('║ Product: '.($price['product']['name'] ?? 'N/A'));
+        $this->line('║ Created: '.$this->formatDate($price['created_at']));
+        $this->line('║ Updated: '.$this->formatDate($price['updated_at']));
 
         if (isset($price['interval'])) {
-            $intervalText = ($price['interval_count'] ?? 1) > 1 
+            $intervalText = ($price['interval_count'] ?? 1) > 1
                 ? "Every {$price['interval_count']} {$price['interval']}s"
                 : "Every {$price['interval']}";
             $this->line("║ Billing: {$intervalText}");
         }
 
-        if (!empty($price['metadata'])) {
-            $this->line("║ Metadata:");
+        if (! empty($price['metadata'])) {
+            $this->line('║ Metadata:');
             foreach ($price['metadata'] as $key => $value) {
                 $this->line("║   {$key}: {$value}");
             }
         }
-        
+
         $this->line('╚══════════════════════════════════════════════════════════════╝');
     }
 
@@ -841,7 +868,7 @@ class ProductManageCommand extends Command
                 'activate' => 'Activate multiple prices',
                 'deactivate' => 'Deactivate multiple prices',
                 'export' => 'Export all prices',
-                'back' => 'Back'
+                'back' => 'Back',
             ]
         );
 
@@ -859,41 +886,43 @@ class ProductManageCommand extends Command
         $status = $active ? 'active' : 'inactive';
 
         $this->line("⏳ Fetching prices to {$action}...");
-        
-        $prices = $this->api->getPrices(['per_page' => 100, 'active' => !$active]);
+
+        $prices = $this->api->getPrices(['per_page' => 100, 'active' => ! $active]);
 
         if (empty($prices['data'])) {
             $this->info("📭 No {$status} prices found.");
+
             return;
         }
 
         $this->line('');
-        $this->line("💰 Found " . count($prices['data']) . " prices to {$action}:");
-        
+        $this->line('💰 Found '.count($prices['data'])." prices to {$action}:");
+
         foreach ($prices['data'] as $price) {
-            $this->line("• " . number_format($price['amount'] / 100, 2) . " " . strtoupper($price['currency']) . 
-                       " - " . ($price['product']['name'] ?? 'N/A'));
+            $this->line('• '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']).
+                       ' - '.($price['product']['name'] ?? 'N/A'));
         }
 
-        if (!confirm("Proceed to {$action} all these prices?", false)) {
+        if (! confirm("Proceed to {$action} all these prices?", false)) {
             $this->info("Bulk {$action} cancelled.");
+
             return;
         }
 
         $this->line("⏳ Bulk {$action} in progress...");
-        
+
         $updated = 0;
         foreach ($prices['data'] as $price) {
             try {
                 $this->api->updatePrice($price['id'], ['active' => $active]);
                 $updated++;
             } catch (ChargilyApiException $e) {
-                $this->warn("❌ Failed to {$action} price {$price['id']}: " . $e->getUserMessage());
+                $this->warn("❌ Failed to {$action} price {$price['id']}: ".$e->getUserMessage());
             }
         }
 
-        $this->info("✅ Bulk operation completed!");
-        $this->line("📊 {$updated} out of " . count($prices['data']) . " prices were successfully " . ($active ? 'activated' : 'deactivated'));
+        $this->info('✅ Bulk operation completed!');
+        $this->line("📊 {$updated} out of ".count($prices['data']).' prices were successfully '.($active ? 'activated' : 'deactivated'));
     }
 
     protected function exportPrices(): void
@@ -905,29 +934,30 @@ class ProductManageCommand extends Command
         );
 
         $this->line('⏳ Fetching prices for export...');
-        
+
         $prices = $this->api->getPrices(['per_page' => $limit]);
 
         if (empty($prices['data'])) {
             $this->info('📭 No prices found to export.');
+
             return;
         }
 
         $currentApp = $this->config->getCurrentApplication();
         $currentMode = $this->config->getCurrentMode();
-        $filename = storage_path("app/prices_export_{$currentApp}_{$currentMode}_" . date('Y_m_d_H_i_s') . '.csv');
-        
+        $filename = storage_path("app/prices_export_{$currentApp}_{$currentMode}_".date('Y_m_d_H_i_s').'.csv');
+
         // Ensure directory exists
-        if (!is_dir(dirname($filename))) {
+        if (! is_dir(dirname($filename))) {
             mkdir(dirname($filename), 0755, true);
         }
 
         $file = fopen($filename, 'w');
-        
+
         // CSV Headers
         fputcsv($file, [
             'ID', 'Product ID', 'Product Name', 'Amount', 'Currency', 'Type',
-            'Interval', 'Interval Count', 'Active', 'Created At', 'Updated At'
+            'Interval', 'Interval Count', 'Active', 'Created At', 'Updated At',
         ]);
 
         // CSV Data
@@ -943,14 +973,14 @@ class ProductManageCommand extends Command
                 $price['interval_count'] ?? '',
                 $price['active'] ? 'Yes' : 'No',
                 $price['created_at'],
-                $price['updated_at']
+                $price['updated_at'],
             ]);
         }
 
         fclose($file);
 
         $this->info("✅ Prices exported to: {$filename}");
-        $this->line("📁 File contains " . count($prices['data']) . " price records");
+        $this->line('📁 File contains '.count($prices['data']).' price records');
     }
 
     protected function formatDate(string $date): string

@@ -8,7 +8,7 @@ class ChargilyApiException extends Exception
 {
     protected array $apiResponse;
 
-    public function __construct(string $message, int $code = 0, array $apiResponse = [], Exception $previous = null)
+    public function __construct(string $message, int $code = 0, array $apiResponse = [], ?Exception $previous = null)
     {
         $this->apiResponse = $apiResponse;
         parent::__construct($message, $code, $previous);
@@ -75,7 +75,7 @@ class ChargilyApiException extends Exception
             case 404:
                 return 'The requested resource was not found.';
             case 422:
-                return 'Validation error: ' . $this->formatValidationErrors();
+                return 'Validation error: '.$this->formatValidationErrors();
             case 429:
                 return 'Rate limit exceeded. Please wait and try again.';
             case 500:
@@ -93,7 +93,7 @@ class ChargilyApiException extends Exception
     protected function formatValidationErrors(): string
     {
         $errors = $this->getValidationErrors();
-        
+
         if (empty($errors)) {
             return $this->message;
         }
@@ -101,9 +101,9 @@ class ChargilyApiException extends Exception
         $formatted = [];
         foreach ($errors as $field => $messages) {
             if (is_array($messages)) {
-                $formatted[] = $field . ': ' . implode(', ', $messages);
+                $formatted[] = $field.': '.implode(', ', $messages);
             } else {
-                $formatted[] = $field . ': ' . $messages;
+                $formatted[] = $field.': '.$messages;
             }
         }
 

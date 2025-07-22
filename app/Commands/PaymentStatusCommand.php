@@ -2,19 +2,22 @@
 
 namespace App\Commands;
 
+use App\Exceptions\ChargilyApiException;
 use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
-use App\Exceptions\ChargilyApiException;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\text;
 
 class PaymentStatusCommand extends Command
 {
     protected $signature = 'payment:status {checkout_id? : The checkout ID to check}';
+
     protected $description = 'Check the status of a payment';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -27,9 +30,10 @@ class PaymentStatusCommand extends Command
     public function handle(): int
     {
         $checkoutId = $this->argument('checkout_id') ?: $this->getCheckoutId();
-        
-        if (!$checkoutId) {
+
+        if (! $checkoutId) {
             $this->error('Checkout ID is required');
+
             return 1;
         }
 
@@ -49,6 +53,7 @@ class PaymentStatusCommand extends Command
             );
         } catch (\Exception $e) {
             $this->info('Operation cancelled.');
+
             return null;
         }
     }
@@ -63,19 +68,20 @@ class PaymentStatusCommand extends Command
 
         try {
             $this->line('⏳ Retrieving payment status...');
-            
+
             $payment = $this->api
                 ->setApplication($currentApp)
                 ->setMode($currentMode)
                 ->getCheckout($checkoutId);
 
             $this->displayPaymentStatus($payment);
-            
+
             return 0;
-            
+
         } catch (ChargilyApiException $e) {
-            $this->error('❌ Failed to retrieve payment: ' . $e->getUserMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('❌ Failed to retrieve payment: '.$e->getUserMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -83,7 +89,7 @@ class PaymentStatusCommand extends Command
     protected function displayHeader(string $appName, string $mode): void
     {
         $modeDisplay = $mode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE';
-        
+
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
         $this->line('║                    Payment Status                           ║');
@@ -104,7 +110,7 @@ class PaymentStatusCommand extends Command
 
         // Status with color coding
         $status = strtoupper($payment['status']);
-        $statusDisplay = match($payment['status']) {
+        $statusDisplay = match ($payment['status']) {
             'paid' => '<fg=green>✅ PAID</>',
             'pending' => '<fg=yellow>🟡 PENDING</>',
             'processing' => '<fg=blue>🔄 PROCESSING</>',
@@ -115,8 +121,8 @@ class PaymentStatusCommand extends Command
 
         $this->line("Status: {$statusDisplay}");
         $this->line("Checkout ID: {$payment['id']}");
-        $this->line("Amount: " . number_format($payment['amount']) . " " . strtoupper($payment['currency']));
-        
+        $this->line('Amount: '.number_format($payment['amount']).' '.strtoupper($payment['currency']));
+
         if (isset($payment['description']) && $payment['description']) {
             $this->line("Description: {$payment['description']}");
         }
@@ -137,7 +143,7 @@ class PaymentStatusCommand extends Command
 
         // Status-specific information
         $this->line('');
-        match($payment['status']) {
+        match ($payment['status']) {
             'paid' => $this->info('✅ Payment completed successfully!'),
             'pending' => $this->warn('⏳ Payment is waiting for customer action'),
             'processing' => $this->info('🔄 Payment is being processed'),
@@ -152,7 +158,7 @@ class PaymentStatusCommand extends Command
             $this->line('💡 Next steps:');
             $this->line('   • Share the payment URL with your customer');
             $this->line('   • Payment will expire automatically after 30 minutes');
-            $this->line('   • Check status again later: chargily payment:status ' . $payment['id']);
+            $this->line('   • Check status again later: chargily payment:status '.$payment['id']);
         }
     }
 

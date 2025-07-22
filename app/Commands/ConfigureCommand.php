@@ -2,17 +2,17 @@
 
 namespace App\Commands;
 
-use App\Services\ChargilyApiService;
-use App\Services\ConfigurationService;
 use App\Exceptions\ChargilyApiException;
 use App\Exceptions\ConfigurationException;
+use App\Services\ChargilyApiService;
+use App\Services\ConfigurationService;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
+
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
-use function Laravel\Prompts\password;
-use function Laravel\Prompts\multiselect;
 
 class ConfigureCommand extends Command
 {
@@ -26,6 +26,7 @@ class ConfigureCommand extends Command
     protected $description = 'Configure Chargily Pay CLI applications and settings';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -74,7 +75,7 @@ class ConfigureCommand extends Command
             $this->line('');
             $this->line('This is your first time using the CLI. Let\'s set up your first application.');
             $this->line('');
-            
+
             return $this->createFirstApplication();
         }
 
@@ -86,7 +87,7 @@ class ConfigureCommand extends Command
                 'What would you like to do? (Press Ctrl+C to cancel)',
                 [
                     'add_app' => '➕ Add New Application',
-                    'switch_app' => '🔄 Switch Application', 
+                    'switch_app' => '🔄 Switch Application',
                     'switch_mode' => '🔀 Switch Mode (Test/Live)',
                     'separator1' => '─────────────────────',
                     'setup_current' => '⚙️  Setup Current Application',
@@ -101,6 +102,7 @@ class ConfigureCommand extends Command
             );
         } catch (\Exception $e) {
             $this->info('Configuration cancelled.');
+
             return 0;
         }
 
@@ -140,23 +142,23 @@ class ConfigureCommand extends Command
 
         $this->line('📊 Current Configuration:');
         $this->line("   Application: {$app['name']} ({$currentApp})");
-        
+
         if ($globalMode) {
             $this->line("   Mode: {$currentMode} (Global Override: {$globalMode})");
-            $this->warn("   ⚠️  Global mode override is active!");
+            $this->warn('   ⚠️  Global mode override is active!');
         } else {
             $this->line("   Mode: {$currentMode}");
         }
 
         $apiKey = $this->config->getApiKey($currentApp, $currentMode);
-        $this->line("   API Key: " . ($apiKey ? '✅ Configured' : '❌ Not configured'));
-        
+        $this->line('   API Key: '.($apiKey ? '✅ Configured' : '❌ Not configured'));
+
         $cachedBalance = $this->config->getCachedBalance($currentApp, $currentMode);
         if ($cachedBalance) {
             $balance = $cachedBalance['wallets'][0]['balance'] ?? 'Unknown';
             $this->line("   Balance: {$balance} DZD (cached)");
         }
-        
+
         $this->line('');
     }
 
@@ -172,13 +174,14 @@ class ConfigureCommand extends Command
             'Application identifier (used in commands)',
             default: str_replace([' ', '-'], '_', strtolower($name)),
             required: true,
-            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                ? null 
+            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                ? null
                 : 'Identifier must contain only lowercase letters, numbers, and underscores'
         );
 
         if ($this->config->applicationExists($id)) {
             $this->error("Application '{$id}' already exists!");
+
             return 1;
         }
 
@@ -201,18 +204,18 @@ class ConfigureCommand extends Command
 
         $webhookUrl = text(
             'Webhook URL (optional)',
-            placeholder: "https://mysite.com/webhooks/chargily"
+            placeholder: 'https://mysite.com/webhooks/chargily'
         );
 
         $successUrl = text(
             'Default success URL',
-            placeholder: "https://mysite.com/payment/success",
+            placeholder: 'https://mysite.com/payment/success',
             required: true
         );
 
         $failureUrl = text(
             'Default failure URL (optional)',
-            placeholder: "https://mysite.com/payment/failed"
+            placeholder: 'https://mysite.com/payment/failed'
         );
 
         // Create the application
@@ -235,16 +238,16 @@ class ConfigureCommand extends Command
             // Test the API connection
             $this->line('');
             $this->line('🧪 Testing API connection...');
-            
+
             $result = $this->api->setApplication($id)->setMode($mode)->testConnection();
-            
+
             if ($result['success']) {
                 $this->info('✅ API connection successful!');
                 $balance = $result['data']['wallets'][0]['balance'] ?? 0;
                 $this->line("💰 Balance: {$balance} DZD");
             } else {
-                $this->error('❌ API connection failed: ' . $result['message']);
-                $this->line('💡 ' . $result['error_code'] ?? 'Check your API key and try again');
+                $this->error('❌ API connection failed: '.$result['message']);
+                $this->line('💡 '.$result['error_code'] ?? 'Check your API key and try again');
             }
 
             $this->line('');
@@ -256,8 +259,9 @@ class ConfigureCommand extends Command
             return 0;
 
         } catch (ConfigurationException $e) {
-            $this->error('Configuration error: ' . $e->getMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('Configuration error: '.$e->getMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -286,7 +290,7 @@ class ConfigureCommand extends Command
             $this->info("Configuring {$configMode} mode...");
 
             $currentKey = $this->config->getApiKey($currentApp, $configMode);
-            $hasKey = !empty($currentKey);
+            $hasKey = ! empty($currentKey);
 
             if ($hasKey) {
                 $updateKey = confirm("Update existing {$configMode} API key?", false);
@@ -311,15 +315,15 @@ class ConfigureCommand extends Command
             // Test connection if key was updated
             if ($updateKey) {
                 $this->line("🧪 Testing {$configMode} API connection...");
-                
+
                 $result = $this->api->setApplication($currentApp)->setMode($configMode)->testConnection();
-                
+
                 if ($result['success']) {
                     $this->info("✅ {$configMode} API connection successful!");
                     $balance = $result['data']['wallets'][0]['balance'] ?? 0;
                     $this->line("💰 {$configMode} balance: {$balance} DZD");
                 } else {
-                    $this->error("❌ {$configMode} API connection failed: " . $result['message']);
+                    $this->error("❌ {$configMode} API connection failed: ".$result['message']);
                 }
             }
         }
@@ -331,7 +335,7 @@ class ConfigureCommand extends Command
 
         $this->line('');
         $this->info('✅ Application configuration updated!');
-        
+
         return 0;
     }
 
@@ -346,12 +350,12 @@ class ConfigureCommand extends Command
                 $webhook = text(
                     "Webhook URL for {$mode} mode",
                     default: $current,
-                    placeholder: "https://mysite.com/webhooks/chargily"
+                    placeholder: 'https://mysite.com/webhooks/chargily'
                 );
 
                 if ($webhook !== $current) {
                     $this->config->updateApplication($appId, [
-                        $mode => ['webhook_url' => $webhook]
+                        $mode => ['webhook_url' => $webhook],
                     ]);
                 }
             }
@@ -367,20 +371,20 @@ class ConfigureCommand extends Command
                     "Success URL for {$mode} mode",
                     default: $currentSuccess,
                     required: true,
-                    placeholder: "https://mysite.com/payment/success"
+                    placeholder: 'https://mysite.com/payment/success'
                 );
 
                 $failure = text(
                     "Failure URL for {$mode} mode",
                     default: $currentFailure,
-                    placeholder: "https://mysite.com/payment/failed"
+                    placeholder: 'https://mysite.com/payment/failed'
                 );
 
                 $this->config->updateApplication($appId, [
                     $mode => [
                         'default_success_url' => $success,
                         'default_failure_url' => $failure,
-                    ]
+                    ],
                 ]);
             }
         }
@@ -413,8 +417,8 @@ class ConfigureCommand extends Command
                         'max_single_payment' => $maxSingle,
                         'max_daily_payments' => $maxDaily,
                         'max_daily_volume' => $maxVolume,
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
             $this->info('✅ Safety limits updated');
@@ -438,6 +442,7 @@ class ConfigureCommand extends Command
 
         if ($selected === $current) {
             $this->info('Already using this application.');
+
             return 0;
         }
 
@@ -488,6 +493,7 @@ class ConfigureCommand extends Command
 
         if (empty($templates)) {
             $this->error('No templates available.');
+
             return 1;
         }
 
@@ -503,23 +509,26 @@ class ConfigureCommand extends Command
             'Application identifier',
             default: str_replace([' ', '-'], '_', strtolower($name)),
             required: true,
-            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                ? null 
+            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                ? null
                 : 'Identifier must contain only lowercase letters, numbers, and underscores'
         );
 
         if ($this->config->applicationExists($id)) {
             $this->error("Application '{$id}' already exists!");
+
             return 1;
         }
 
         try {
             $this->config->createApplicationFromTemplate($templateId, $id, $name);
             $this->info("✅ Application '{$name}' created from template!");
-            $this->line('💡 Don\'t forget to configure your API keys with: chargily configure --app=' . $id);
+            $this->line('💡 Don\'t forget to configure your API keys with: chargily configure --app='.$id);
+
             return 0;
         } catch (ConfigurationException $e) {
-            $this->error('Error: ' . $e->getMessage());
+            $this->error('Error: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -533,29 +542,32 @@ class ConfigureCommand extends Command
         }
 
         $sourceId = select('Select application to clone:', $options);
-        
+
         $name = text('New application name', required: true);
         $id = text(
             'New application identifier',
             default: str_replace([' ', '-'], '_', strtolower($name)),
             required: true,
-            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                ? null 
+            validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                ? null
                 : 'Identifier must contain only lowercase letters, numbers, and underscores'
         );
 
         if ($this->config->applicationExists($id)) {
             $this->error("Application '{$id}' already exists!");
+
             return 1;
         }
 
         try {
             $this->config->cloneApplication($sourceId, $id, $name);
             $this->info("✅ Application '{$name}' cloned successfully!");
-            $this->line('💡 API keys were cleared for security. Configure them with: chargily configure --app=' . $id);
+            $this->line('💡 API keys were cleared for security. Configure them with: chargily configure --app='.$id);
+
             return 0;
         } catch (ConfigurationException $e) {
-            $this->error('Error: ' . $e->getMessage());
+            $this->error('Error: '.$e->getMessage());
+
             return 1;
         }
     }
@@ -576,30 +588,31 @@ class ConfigureCommand extends Command
 
         try {
             $result = $this->api->setApplication($currentApp)->setMode($currentMode)->testConnection();
-            
+
             if ($result['success']) {
                 $this->info('✅ Connection successful!');
-                
+
                 $data = $result['data'];
                 $this->line('');
                 $this->line('📊 Account Information:');
-                $this->line("   Environment: " . ($data['livemode'] ? 'Live' : 'Test'));
-                
+                $this->line('   Environment: '.($data['livemode'] ? 'Live' : 'Test'));
+
                 foreach ($data['wallets'] as $wallet) {
                     $this->line("   {$wallet['currency']} Balance: {$wallet['balance']}");
                     $this->line("   {$wallet['currency']} Ready for payout: {$wallet['ready_for_payout']}");
                     $this->line("   {$wallet['currency']} On hold: {$wallet['on_hold']}");
                 }
             } else {
-                $this->error('❌ Connection failed: ' . $result['message']);
+                $this->error('❌ Connection failed: '.$result['message']);
                 $this->line('💡 Suggested action: Run "chargily configure" to check your settings');
             }
-            
+
             return 0;
-            
+
         } catch (ChargilyApiException $e) {
-            $this->error('❌ API Error: ' . $e->getUserMessage());
-            $this->line('💡 ' . $e->getSuggestedAction());
+            $this->error('❌ API Error: '.$e->getUserMessage());
+            $this->line('💡 '.$e->getSuggestedAction());
+
             return 1;
         }
     }
@@ -612,30 +625,34 @@ class ConfigureCommand extends Command
     protected function handleExport(): int
     {
         $appId = $this->option('export');
-        
-        if (!$this->config->applicationExists($appId)) {
+
+        if (! $this->config->applicationExists($appId)) {
             $this->error("Application '{$appId}' does not exist.");
+
             return 1;
         }
 
         $config = $this->config->exportApplication($appId);
         $json = json_encode($config, JSON_PRETTY_PRINT);
-        
+
         $this->line($json);
+
         return 0;
     }
 
     protected function handleImport(): int
     {
         $file = $this->option('import');
-        
-        if (!file_exists($file)) {
+
+        if (! file_exists($file)) {
             $this->error("File '{$file}' does not exist.");
+
             return 1;
         }
 
         // Import logic would go here
         $this->error('Import functionality not yet implemented.');
+
         return 1;
     }
 
@@ -646,6 +663,7 @@ class ConfigureCommand extends Command
 
         // This would configure global settings
         $this->error('Global settings configuration not yet implemented.');
+
         return 1;
     }
 
@@ -666,22 +684,27 @@ class ConfigureCommand extends Command
                 'Application identifier (used in commands) - Press Ctrl+C to cancel',
                 default: str_replace([' ', '-'], '_', strtolower($name)),
                 required: true,
-                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                    ? null 
+                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                    ? null
                     : 'Identifier must contain only lowercase letters, numbers, and underscores'
             );
 
             if ($this->config->applicationExists($id)) {
                 $this->error("Application '{$id}' already exists!");
+
                 return 1;
             }
 
             // Get API keys with validation
             $testKey = $this->getValidatedApiKey('test');
-            if (!$testKey) return 1;
+            if (! $testKey) {
+                return 1;
+            }
 
             $liveKey = $this->getValidatedApiKey('live');
-            if (!$liveKey) return 1;
+            if (! $liveKey) {
+                return 1;
+            }
 
             // Create the application
             $config = [
@@ -690,21 +713,21 @@ class ConfigureCommand extends Command
                     'api_key' => $testKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
+                    'default_failure_url' => '',
                 ],
                 'live' => [
                     'api_key' => $liveKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
-                ]
+                    'default_failure_url' => '',
+                ],
             ];
 
             $this->config->createApplication($id, $config);
-            
+
             $this->line('');
             $this->info("✅ Application '{$name}' added successfully!");
-            
+
             if (confirm('Set as current application?', true)) {
                 $this->config->setCurrentApplication($id);
                 $this->config->setCurrentMode($id, 'test'); // Default to test mode
@@ -715,6 +738,7 @@ class ConfigureCommand extends Command
 
         } catch (\Exception $e) {
             $this->info('Application creation cancelled.');
+
             return 0;
         }
     }
@@ -738,9 +762,10 @@ class ConfigureCommand extends Command
 
                 // Validate key silently by checking balance
                 $this->line('🔍 Validating API key...');
-                
+
                 if ($this->validateApiKeySilently($apiKey, $mode)) {
                     $this->info("✅ {$modeDisplay} API key is valid");
+
                     return $apiKey;
                 } else {
                     $attempt++;
@@ -754,6 +779,7 @@ class ConfigureCommand extends Command
         }
 
         $this->error('❌ Maximum attempts exceeded.');
+
         return null;
     }
 
@@ -761,10 +787,10 @@ class ConfigureCommand extends Command
     {
         try {
             // Create temporary application config for testing
-            $tempAppId = 'temp_validation_' . uniqid();
+            $tempAppId = 'temp_validation_'.uniqid();
             $this->config->createApplication($tempAppId, [
                 'name' => 'Temp Validation',
-                $mode => ['api_key' => $apiKey]
+                $mode => ['api_key' => $apiKey],
             ]);
 
             // Test API connection by checking balance
@@ -775,7 +801,7 @@ class ConfigureCommand extends Command
             $this->config->deleteApplication($tempAppId);
 
             return true;
-            
+
         } catch (\Exception $e) {
             // Clean up temporary config on error
             try {
@@ -795,7 +821,7 @@ class ConfigureCommand extends Command
         $app = $this->config->getApplication($currentApp);
 
         $this->info("🔀 Switch Mode for {$app['name']}");
-        $this->line("Current mode: " . ($currentMode === 'live' ? '🔴 LIVE' : '🧪 TEST'));
+        $this->line('Current mode: '.($currentMode === 'live' ? '🔴 LIVE' : '🧪 TEST'));
         $this->line('');
 
         try {
@@ -809,7 +835,8 @@ class ConfigureCommand extends Command
             );
 
             if ($newMode === $currentMode) {
-                $this->info('Already in ' . ($newMode === 'live' ? 'live' : 'test') . ' mode.');
+                $this->info('Already in '.($newMode === 'live' ? 'live' : 'test').' mode.');
+
                 return 0;
             }
 
@@ -821,6 +848,7 @@ class ConfigureCommand extends Command
 
         } catch (\Exception $e) {
             $this->info('Mode switch cancelled.');
+
             return 0;
         }
     }
@@ -830,6 +858,7 @@ class ConfigureCommand extends Command
         $apps = $this->config->getApplications();
         if (empty($apps)) {
             $this->error('No applications to update.');
+
             return 1;
         }
 
@@ -856,7 +885,7 @@ class ConfigureCommand extends Command
                     'test_key' => '🧪 Test API Key',
                     'live_key' => '🔴 Live API Key',
                     'both_keys' => '🔑 Both API Keys',
-                    'cancel' => '🚫 Cancel'
+                    'cancel' => '🚫 Cancel',
                 ]
             );
 
@@ -869,9 +898,11 @@ class ConfigureCommand extends Command
                     return $this->updateApplicationKey($appId, 'live');
                 case 'both_keys':
                     $this->updateApplicationKey($appId, 'test');
+
                     return $this->updateApplicationKey($appId, 'live');
                 case 'cancel':
                     $this->info('Update cancelled.');
+
                     return 0;
             }
 
@@ -879,6 +910,7 @@ class ConfigureCommand extends Command
 
         } catch (\Exception $e) {
             $this->info('Update cancelled.');
+
             return 0;
         }
     }
@@ -898,6 +930,7 @@ class ConfigureCommand extends Command
             return 0;
         } catch (\Exception $e) {
             $this->info('Name update cancelled.');
+
             return 0;
         }
     }
@@ -906,15 +939,18 @@ class ConfigureCommand extends Command
     {
         $modeDisplay = $mode === 'test' ? '🧪 TEST' : '🔴 LIVE';
         $this->info("Updating {$modeDisplay} API Key");
-        
+
         $newKey = $this->getValidatedApiKey($mode);
-        if (!$newKey) return 0;
+        if (! $newKey) {
+            return 0;
+        }
 
         $this->config->updateApplication($appId, [
-            $mode => ['api_key' => $newKey]
+            $mode => ['api_key' => $newKey],
         ]);
 
         $this->info("✅ {$modeDisplay} API key updated successfully");
+
         return 0;
     }
 
@@ -923,6 +959,7 @@ class ConfigureCommand extends Command
         $apps = $this->config->getApplications();
         if (empty($apps)) {
             $this->error('No applications to remove.');
+
             return 1;
         }
 
@@ -933,7 +970,7 @@ class ConfigureCommand extends Command
             $options = [];
             foreach ($apps as $id => $app) {
                 $current = $id === $this->config->getCurrentApplication() ? ' (current)' : '';
-                $options[$id] = $app['name'] . $current;
+                $options[$id] = $app['name'].$current;
             }
 
             $appId = select(
@@ -942,13 +979,14 @@ class ConfigureCommand extends Command
             );
 
             $app = $this->config->getApplication($appId);
-            
+
             $this->warn("⚠️  You are about to remove '{$app['name']}'");
             $this->line('This action cannot be undone.');
             $this->line('');
 
-            if (!confirm('Are you sure you want to remove this application?', false)) {
+            if (! confirm('Are you sure you want to remove this application?', false)) {
                 $this->info('Removal cancelled.');
+
                 return 0;
             }
 
@@ -956,7 +994,7 @@ class ConfigureCommand extends Command
             $currentApp = $this->config->getCurrentApplication();
             if ($appId === $currentApp) {
                 $remainingApps = array_diff_key($apps, [$appId => null]);
-                if (!empty($remainingApps)) {
+                if (! empty($remainingApps)) {
                     $firstRemaining = array_key_first($remainingApps);
                     $this->config->setCurrentApplication($firstRemaining);
                     $this->info("Switched to '{$remainingApps[$firstRemaining]['name']}' as current application.");
@@ -973,12 +1011,13 @@ class ConfigureCommand extends Command
                 $this->warn('⚠️  No applications remaining!');
                 $this->line('You need at least one application to use the CLI.');
                 $this->line('');
-                
+
                 if (confirm('Would you like to set up a new application now?', true)) {
                     return $this->runSetupWizard();
                 } else {
                     $this->line('');
                     $this->line('💡 Run the CLI again when you\'re ready to setup an application.');
+
                     return 0;
                 }
             }
@@ -987,6 +1026,7 @@ class ConfigureCommand extends Command
 
         } catch (\Exception $e) {
             $this->info('Removal cancelled.');
+
             return 0;
         }
     }
@@ -1000,8 +1040,9 @@ class ConfigureCommand extends Command
         $this->line('');
 
         try {
-            if (!confirm('Are you absolutely sure? Type YES to confirm', false)) {
+            if (! confirm('Are you absolutely sure? Type YES to confirm', false)) {
                 $this->info('Reset cancelled.');
+
                 return 0;
             }
 
@@ -1012,12 +1053,13 @@ class ConfigureCommand extends Command
 
             if ($confirmation !== 'DELETE EVERYTHING') {
                 $this->info('Reset cancelled - confirmation text did not match.');
+
                 return 0;
             }
 
             // Perform reset
             $this->config->resetAllConfiguration();
-            
+
             $this->line('');
             $this->info('🔥 All configuration has been reset!');
             $this->line('💡 Run the setup command to configure your first application again.');
@@ -1026,6 +1068,7 @@ class ConfigureCommand extends Command
 
         } catch (\Exception $e) {
             $this->info('Reset cancelled.');
+
             return 0;
         }
     }
@@ -1040,7 +1083,7 @@ class ConfigureCommand extends Command
 
         // Show guidance
         $this->displayApiKeyGuidance();
-        
+
         try {
             // Get application details
             $name = text(
@@ -1053,14 +1096,15 @@ class ConfigureCommand extends Command
                 'Application identifier (used internally) - Press Ctrl+C to cancel',
                 default: str_replace([' ', '-'], '_', strtolower($name)),
                 required: true,
-                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value) 
-                    ? null 
+                validate: fn ($value) => preg_match('/^[a-z0-9_]+$/', $value)
+                    ? null
                     : 'Must contain only lowercase letters, numbers, and underscores'
             );
 
             // Check if identifier already exists
             if ($this->config->applicationExists($id)) {
                 $this->error("Application '{$id}' already exists!");
+
                 return 1;
             }
 
@@ -1070,16 +1114,20 @@ class ConfigureCommand extends Command
 
             // Get test API key
             $testKey = $this->getValidatedApiKey('test');
-            if (!$testKey) return 0;
+            if (! $testKey) {
+                return 0;
+            }
 
             // Ask about live key
             $this->line('');
             $addLiveKey = confirm('Would you like to add your LIVE API key now? (You can add it later)', false);
-            
+
             $liveKey = null;
             if ($addLiveKey) {
                 $liveKey = $this->getValidatedApiKey('live');
-                if (!$liveKey) return 0;
+                if (! $liveKey) {
+                    return 0;
+                }
             }
 
             // Create the application
@@ -1089,14 +1137,14 @@ class ConfigureCommand extends Command
                     'api_key' => $testKey,
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
+                    'default_failure_url' => '',
                 ],
                 'live' => [
                     'api_key' => $liveKey ?: '',
                     'webhook_secret' => '',
                     'default_success_url' => '',
-                    'default_failure_url' => ''
-                ]
+                    'default_failure_url' => '',
+                ],
             ];
 
             $this->config->createApplication($id, $config);
@@ -1111,13 +1159,13 @@ class ConfigureCommand extends Command
             $this->info("✅ Application '{$name}' created successfully!");
             $this->line("📊 Current: {$name} → 🧪 TEST MODE");
             $this->line('');
-            
+
             $this->line('🚀 <fg=green>You\'re all set! Here\'s what you can do now:</>');
             $this->line('   • 💳 Create test payments');
-            $this->line('   • 📋 List your payment history'); 
+            $this->line('   • 📋 List your payment history');
             $this->line('   • 💰 Check your balance');
             $this->line('   • ⚙️  Configure additional settings');
-            if (!$liveKey) {
+            if (! $liveKey) {
                 $this->line('   • 🔴 Add your live API key later via configuration');
             }
             $this->line('');
@@ -1127,6 +1175,7 @@ class ConfigureCommand extends Command
         } catch (\Exception $e) {
             $this->line('');
             $this->info('👋 Setup cancelled.');
+
             return 0;
         }
     }
