@@ -30,14 +30,24 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 ### Installation
 
-**Option 1: Direct Download (Recommended)**
+**Option 1: Composer (Global)**
+```bash
+composer global require karaodin/chargily-pay-cli
+```
+
+**Option 2: Homebrew (macOS/Linux)**
+```bash
+brew install karaodin/chargily-pay-cli/chargily
+```
+
+**Option 3: Direct Download**
 ```bash
 curl -L https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily -o chargily
 chmod +x chargily
 sudo mv chargily /usr/local/bin/
 ```
 
-**Option 2: Docker**
+**Option 4: Docker**
 ```bash
 docker run -it ghcr.io/karaodin/chargily-pay-cli:latest
 ```
