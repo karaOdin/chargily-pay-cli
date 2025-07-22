@@ -6,7 +6,7 @@ use App\Services\ChargilyApiService;
 use App\Services\ConfigurationService;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
-use NunoMaduro\LaravelConsoleMenu\Menu;
+// Note: Menu is conditionally loaded based on package availability
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\text;
 
@@ -78,15 +78,15 @@ class MainMenuCommand extends Command
 
     protected function isInteractiveMenuSupported(): bool
     {
-        // Check if POSIX extension is available (required for interactive menus)
-        return extension_loaded('posix');
+        // Check if POSIX extension is available AND laravel-console-menu package is installed
+        return extension_loaded('posix') && class_exists('NunoMaduro\LaravelConsoleMenu\Menu');
     }
 
     protected function showCommandListMenu(): int
     {
         $this->displayHeader();
         
-        $this->warn('📱 Interactive menu not supported on this system (missing POSIX extension).');
+        $this->warn('📱 Interactive menu not supported on this system.');
         $this->info('💡 Use individual commands instead:');
         $this->line('');
         
@@ -367,26 +367,8 @@ class MainMenuCommand extends Command
         // Try to get balance (cached or fresh)
         $balanceInfo = $this->getBalanceInfo($currentApp, $currentMode);
 
-        $menu = $this->menu('Chargily Pay CLI - Main Menu');
-        
-        // Add menu options
-        $menu->addOption('payment:create', '💳 Create Payment')
-             ->addOption('payment:status', '🔍 Check Payment Status')  
-             ->addOption('payment:list', '📋 List Recent Payments')
-             ->addOption('separator1', '─────────────────────')
-             ->addOption('customer:manage', '👥 Manage Customers')
-             ->addOption('product:manage', '📦 Manage Products & Prices')
-             ->addOption('link:manage', '🔗 Manage Payment Links')
-             ->addOption('separator2', '─────────────────────')
-             ->addOption('balance', '💰 Check Balance')
-             ->addOption('configure', '⚙️  Configuration')
-             ->addOption('switch:app', '🏢 Switch Application')
-             ->addOption('switch:mode', '🔄 Switch Mode')
-             ->addOption('separator3', '─────────────────────')
-             ->addOption('help', '📚 Help & Documentation')
-             ->addOption('exit', '🚪 Exit');
-
-        $selected = $menu->open();
+        // Create and show interactive menu
+        $selected = $this->createInteractiveMenu();
 
         // Handle case where menu returns null (user pressed Ctrl+C or ESC)
         if ($selected === null) {
@@ -395,6 +377,37 @@ class MainMenuCommand extends Command
         }
 
         return $this->handleMenuSelection($selected);
+    }
+
+    protected function createInteractiveMenu(): ?string
+    {
+        // Try to use interactive menu if available
+        if (class_exists('NunoMaduro\LaravelConsoleMenu\Menu')) {
+            $menu = app('NunoMaduro\LaravelConsoleMenu\Menu')->setTitle('Chargily Pay CLI - Main Menu');
+            
+            // Add menu options
+            $menu->addOption('payment:create', '💳 Create Payment')
+                 ->addOption('payment:status', '🔍 Check Payment Status')  
+                 ->addOption('payment:list', '📋 List Recent Payments')
+                 ->addOption('separator1', '─────────────────────')
+                 ->addOption('customer:manage', '👥 Manage Customers')
+                 ->addOption('product:manage', '📦 Manage Products & Prices')
+                 ->addOption('link:manage', '🔗 Manage Payment Links')
+                 ->addOption('separator2', '─────────────────────')
+                 ->addOption('balance', '💰 Check Balance')
+                 ->addOption('configure', '⚙️  Configuration')
+                 ->addOption('switch:app', '🏢 Switch Application')
+                 ->addOption('switch:mode', '🔄 Switch Mode')
+                 ->addOption('separator3', '─────────────────────')
+                 ->addOption('help', '📚 Help & Documentation')
+                 ->addOption('exit', '🚪 Exit');
+
+            return $menu->open();
+        }
+        
+        // Fallback to command list
+        $this->showCommandListMenu();
+        return 'exit';
     }
 
     protected function displayWelcomeHeader(): void

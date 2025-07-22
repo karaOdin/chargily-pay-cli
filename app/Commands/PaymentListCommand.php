@@ -361,7 +361,7 @@ class PaymentListCommand extends Command
 
     protected function exportToCsv(array $payments, string $appId, string $mode): void
     {
-        $filename = storage_path("app/payments_export_{$appId}_{$mode}_" . date('Y_m_d_H_i_s') . '.csv');
+        $filename = $this->config->getConfigPath("payments_export_{$appId}_{$mode}_" . date('Y_m_d_H_i_s') . '.csv');
         
         // Ensure directory exists
         if (!is_dir(dirname($filename))) {

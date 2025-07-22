@@ -12,12 +12,39 @@ class ConfigurationService
     protected string $currentApplication;
 
     protected string $configPath;
+    
+    protected string $configDir;
 
     public function __construct()
     {
-        $this->configPath = storage_path('app/chargily_applications.json');
+        // Use user's home directory for config storage, compatible with PHAR
+        $homeDir = $_SERVER['HOME'] ?? $_SERVER['USERPROFILE'] ?? getcwd();
+        $this->configDir = $homeDir . DIRECTORY_SEPARATOR . '.chargily';
+        
+        // Create config directory if it doesn't exist
+        if (!is_dir($this->configDir)) {
+            @mkdir($this->configDir, 0755, true);
+        }
+        
+        $this->configPath = $this->configDir . DIRECTORY_SEPARATOR . 'applications.json';
         $this->loadApplications();
         $this->setDefaultApplication();
+    }
+
+    /**
+     * Get the configuration directory path for file storage
+     */
+    public function getConfigDir(): string
+    {
+        return $this->configDir;
+    }
+
+    /**
+     * Get full path for a file in the config directory
+     */
+    public function getConfigPath(string $filename): string
+    {
+        return $this->configDir . DIRECTORY_SEPARATOR . $filename;
     }
 
     protected function setDefaultApplication(): void
@@ -42,9 +69,8 @@ class ConfigurationService
             $content = File::get($this->configPath);
             $this->applications = json_decode($content, true) ?? [];
         } else {
-            // Initialize with default configuration
-            $this->applications = config('applications.applications', []);
-            $this->saveApplications();
+            // Start with empty applications array - don't load defaults
+            $this->applications = [];
         }
     }
 
@@ -104,18 +130,18 @@ class ConfigurationService
         $this->applications[$id] = array_merge([
             'name' => $config['name'],
             'test' => [
-                'api_key' => $config['test_api_key'] ?? null,
-                'webhook_url' => $config['test_webhook_url'] ?? null,
-                'default_success_url' => $config['test_success_url'] ?? null,
-                'default_failure_url' => $config['test_failure_url'] ?? null,
+                'api_key' => $config['test_api_key'] ?? $config['test']['api_key'] ?? null,
+                'webhook_url' => $config['test_webhook_url'] ?? $config['test']['webhook_url'] ?? null,
+                'default_success_url' => $config['test_success_url'] ?? $config['test']['default_success_url'] ?? null,
+                'default_failure_url' => $config['test_failure_url'] ?? $config['test']['default_failure_url'] ?? null,
                 'balance_cache' => null,
                 'last_balance_check' => null,
             ],
             'live' => [
-                'api_key' => $config['live_api_key'] ?? null,
-                'webhook_url' => $config['live_webhook_url'] ?? null,
-                'default_success_url' => $config['live_success_url'] ?? null,
-                'default_failure_url' => $config['live_failure_url'] ?? null,
+                'api_key' => $config['live_api_key'] ?? $config['live']['api_key'] ?? null,
+                'webhook_url' => $config['live_webhook_url'] ?? $config['live']['webhook_url'] ?? null,
+                'default_success_url' => $config['live_success_url'] ?? $config['live']['default_success_url'] ?? null,
+                'default_failure_url' => $config['live_failure_url'] ?? $config['live']['default_failure_url'] ?? null,
                 'balance_cache' => null,
                 'last_balance_check' => null,
             ],
@@ -182,7 +208,7 @@ class ConfigurationService
         $this->applications[$application]['live']['last_balance_check'] = null;
 
         // Clear any payment cache files related to this app
-        $cacheFiles = glob(storage_path('app/payments_export_' . $application . '_*.csv'));
+        $cacheFiles = glob($this->getConfigPath('payments_export_' . $application . '_*.csv'));
         foreach ($cacheFiles as $file) {
             if (File::exists($file)) {
                 File::delete($file);
@@ -469,8 +495,8 @@ class ConfigurationService
 
         // Clear any cached data
         $cacheFiles = [
-            storage_path('app/balance_cache.json'),
-            storage_path('app/payment_cache.json'),
+            $this->getConfigPath('balance_cache.json'),
+            $this->getConfigPath('payment_cache.json'),
         ];
 
         foreach ($cacheFiles as $file) {

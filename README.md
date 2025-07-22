@@ -28,46 +28,53 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 ## 🛠️ Quick Start
 
-### Installation
+### 📥 Installation (Zero Configuration!)
 
-**Option 1: Composer (Global)**
+**🎯 Method 1: Composer Global (Cross-Platform)**
 ```bash
 composer global require karaodin/chargily-pay-cli
+chargily  # Run anywhere
 ```
 
-**Option 2: Homebrew (macOS/Linux)**
-```bash
-brew install karaodin/chargily-pay-cli/chargily
-```
+**⚡ Method 2: Direct Executable Download**
 
-**Option 3: Direct Download**
+**Linux:**
 ```bash
-curl -L https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily -o chargily
+curl -L https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-linux -o chargily
 chmod +x chargily
 sudo mv chargily /usr/local/bin/
+chargily  # Ready to use!
 ```
 
-**Option 4: Docker**
+**macOS:**
+```bash
+curl -L https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-macos -o chargily
+chmod +x chargily
+sudo mv chargily /usr/local/bin/
+chargily  # Ready to use!
+```
+
+**Windows:**
+```cmd
+# Download and run directly (no setup needed!)
+curl -L https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-windows.phar -o chargily.phar
+php chargily.phar  # Works immediately
+
+# Or add to PATH for global access
+move chargily.phar C:\Windows\System32\
+chargily.phar  # Use anywhere
+```
+
+**🐳 Method 3: Docker**
 ```bash
 docker run -it ghcr.io/karaodin/chargily-pay-cli:latest
 ```
 
-### Windows Installation
-
-For Windows users, install using one of these methods:
-
-**Method 1: Ignore Platform Requirements**
-```cmd
-composer global require karaodin/chargily-pay-cli --ignore-platform-req=ext-posix
-```
-
-**Method 2: Enable WSL (Windows Subsystem for Linux)**
-```cmd
-wsl --install
-# Then use any Linux installation method above
-```
-
-> **Note**: On Windows, interactive menus require the POSIX extension. The CLI will automatically fall back to individual commands if not available.
+> **✅ Zero Configuration**: No environment variables, PHP extensions, or complex setup! The CLI automatically:
+> - Stores config in `~/.chargily/` folder
+> - Shows startup wizard for first-time users  
+> - Works on Windows, Linux, and macOS
+> - Falls back to individual commands if interactive menus aren't supported
 
 ### First Run
 
