@@ -28,24 +28,35 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 ## 🛠️ Quick Start
 
-### 📥 Installation (Super Easy!)
+### 📥 Installation (Dead Simple!)
 
-**🎯 One-Line Install (Recommended)**
+**🎯 Method 1: Direct Download (No Dependencies!)**
 
-**Windows (PowerShell):**
-```powershell
-iwr https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.ps1 -OutFile install.ps1; .\install.ps1
-```
+Just download and run - works on any system with PHP:
 
-**Windows (Command Prompt):**
+**Windows:**
 ```cmd
-curl -o install.bat https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.bat
-install.bat
+curl -L -o chargily.phar https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-windows.phar
+php chargily.phar
 ```
 
-**Linux/macOS:**
+**Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/karaOdin/chargily-pay-cli/main/install.sh | bash
+curl -L -o chargily https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-linux
+chmod +x chargily
+./chargily
+```
+
+**macOS:**
+```bash
+curl -L -o chargily https://github.com/karaOdin/chargily-pay-cli/releases/latest/download/chargily-macos  
+chmod +x chargily
+./chargily
+```
+
+**🎯 Method 2: Via Composer**
+```bash
+composer global require karaodin/chargily-pay-cli
 ```
 
 **Manual Installation (Advanced Users)**
