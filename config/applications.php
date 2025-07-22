@@ -19,7 +19,7 @@ return [
     | Array of configured applications. Each application should have:
     | - name: Human-readable name
     | - test: Test mode configuration
-    | - live: Live mode configuration  
+    | - live: Live mode configuration
     | - current_mode: Current active mode ('test' or 'live')
     | - settings: Application-specific settings
     |
@@ -134,7 +134,7 @@ return [
                 'enable_notifications' => true,
             ],
         ],
-        
+
         'ecommerce' => [
             'name' => 'E-commerce Template',
             'description' => 'Template optimized for online stores',

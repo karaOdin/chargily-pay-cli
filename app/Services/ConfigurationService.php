@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class ConfigurationService
 {
     protected array $applications;
+
     protected string $currentApplication;
+
     protected string $configPath;
 
     public function __construct()
@@ -19,11 +21,11 @@ class ConfigurationService
         $this->loadApplications();
         $this->setDefaultApplication();
     }
-    
+
     protected function setDefaultApplication(): void
     {
         $defaultApp = config('chargily.default_application');
-        
+
         // If the configured default doesn't exist, use first available app or empty string
         if (!$this->applicationExists($defaultApp)) {
             $availableApps = array_keys($this->applications);
@@ -157,30 +159,30 @@ class ConfigurationService
 
         // Clear all cached data for this application
         $this->clearApplicationCache($application);
-        
+
         // Remove from applications array
         unset($this->applications[$application]);
-        
-        // If this was the current application, clear current app reference  
+
+        // If this was the current application, clear current app reference
         if ($application === $this->currentApplication) {
             $this->currentApplication = '';
         }
-        
+
         $this->saveApplications();
     }
-    
+
     protected function clearApplicationCache(string $application): void
     {
         if (!$this->applicationExists($application)) {
             return;
         }
-        
+
         // Clear balance cache for both test and live modes
         $this->applications[$application]['test']['balance_cache'] = null;
         $this->applications[$application]['test']['last_balance_check'] = null;
         $this->applications[$application]['live']['balance_cache'] = null;
         $this->applications[$application]['live']['last_balance_check'] = null;
-        
+
         // Clear any payment cache files related to this app
         $cacheFiles = glob(storage_path('app/payments_export_' . $application . '_*.csv'));
         foreach ($cacheFiles as $file) {
@@ -208,7 +210,7 @@ class ConfigurationService
         $clonedConfig['name'] = $newAppName;
         $clonedConfig['created_at'] = now()->toISOString();
         $clonedConfig['last_used'] = null;
-        
+
         // Clear API keys and sensitive data
         $clonedConfig['test']['api_key'] = null;
         $clonedConfig['live']['api_key'] = null;
@@ -237,7 +239,7 @@ class ConfigurationService
         }
 
         $this->currentApplication = $application;
-        
+
         // Update last used timestamp
         $this->applications[$application]['last_used'] = now()->toISOString();
         $this->saveApplications();
@@ -246,15 +248,15 @@ class ConfigurationService
     /**
      * Get current mode for an application
      */
-    public function getCurrentMode(string $application = null): string
+    public function getCurrentMode(?string $application = null): string
     {
         $app = $application ?? $this->currentApplication;
         $globalOverride = config('chargily.global_mode_override');
-        
+
         if ($globalOverride) {
             return $globalOverride;
         }
-        
+
         // Handle case when no application is set
         if (empty($app) || !$this->applicationExists($app)) {
             return 'test'; // Default to test mode
@@ -361,7 +363,7 @@ class ConfigurationService
     public function createApplicationFromTemplate(string $templateId, string $appId, string $appName): void
     {
         $templates = $this->getTemplates();
-        
+
         if (!isset($templates[$templateId])) {
             throw new ConfigurationException("Template '{$templateId}' does not exist");
         }
@@ -386,13 +388,13 @@ class ConfigurationService
     public function exportApplication(string $application): array
     {
         $config = $this->getApplication($application);
-        
+
         // Remove sensitive data
         unset($config['test']['api_key']);
         unset($config['live']['api_key']);
         unset($config['test']['balance_cache']);
         unset($config['live']['balance_cache']);
-        
+
         return $config;
     }
 
@@ -410,7 +412,7 @@ class ConfigurationService
     public function getApplicationStats(string $application): array
     {
         $app = $this->getApplication($application);
-        
+
         return [
             'name' => $app['name'],
             'current_mode' => $app['current_mode'],
@@ -434,15 +436,15 @@ class ConfigurationService
     {
         $errors = [];
         $app = $this->getApplication($application);
-        
+
         if (empty($app[$mode]['api_key'])) {
             $errors[] = "Missing API key for {$mode} mode";
         }
-        
+
         if (empty($app[$mode]['webhook_url'])) {
             $errors[] = "Missing webhook URL for {$mode} mode";
         }
-        
+
         if (empty($app[$mode]['default_success_url'])) {
             $errors[] = "Missing default success URL for {$mode} mode";
         }

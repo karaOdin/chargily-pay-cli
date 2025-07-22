@@ -151,7 +151,7 @@ return [
     */
     'supported_locales' => [
         'ar' => 'العربية',
-        'en' => 'English', 
+        'en' => 'English',
         'fr' => 'Français',
     ],
 

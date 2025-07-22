@@ -14,9 +14,11 @@ use function Laravel\Prompts\confirm;
 class AppSetupCommand extends Command
 {
     protected $signature = 'app:setup';
+
     protected $description = 'First-time setup for Chargily Pay CLI';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
@@ -59,20 +61,20 @@ class AppSetupCommand extends Command
         $this->info('✅ Setup completed successfully!');
         $this->line('🎉 You can now use all CLI commands.');
         $this->line('');
-        
+
         return 0;
     }
 
     protected function getApiKey(string $mode): ?string
     {
         $modeDisplay = $mode === 'test' ? '🧪 TEST' : '🔴 LIVE';
-        
+
         $this->line("📋 {$modeDisplay} Mode API Key");
         $this->line('');
-        
+
         $attempt = 0;
         $maxAttempts = 3;
-        
+
         while ($attempt < $maxAttempts) {
             $apiKey = text(
                 "Enter your {$mode} API key",
@@ -86,7 +88,7 @@ class AppSetupCommand extends Command
             if ($apiKey) {
                 return $apiKey;
             }
-            
+
             $attempt++;
             if ($attempt < $maxAttempts) {
                 $this->warn("⚠️ Invalid API key format. Please try again. ({$attempt}/{$maxAttempts})");
@@ -118,7 +120,7 @@ class AppSetupCommand extends Command
     protected function testSingleApiKey(string $apiKey, string $mode): bool
     {
         $modeDisplay = $mode === 'test' ? '🧪 TEST' : '🔴 LIVE';
-        
+
         try {
             // Create temporary application config for testing
             $tempAppId = 'temp_setup';
@@ -135,7 +137,7 @@ class AppSetupCommand extends Command
 
             $this->info("✅ {$modeDisplay} API key is valid");
             return true;
-            
+
         } catch (ChargilyApiException $e) {
             // Clean up temporary config
             try {
@@ -145,14 +147,14 @@ class AppSetupCommand extends Command
             }
 
             $this->error("❌ {$modeDisplay} API key validation failed");
-            
+
             if (confirm("Would you like to try a different {$mode} API key?", true)) {
                 $newKey = $this->getApiKey($mode);
                 if ($newKey) {
                     return $this->testSingleApiKey($newKey, $mode);
                 }
             }
-            
+
             return false;
         }
     }
@@ -189,7 +191,7 @@ class AppSetupCommand extends Command
 
             $this->info("✅ Application '{$appName}' created successfully");
             return true;
-            
+
         } catch (\Exception $e) {
             $this->error('❌ Failed to create application: ' . $e->getMessage());
             return false;

@@ -11,9 +11,11 @@ use function Laravel\Prompts\select;
 class AppSwitchCommand extends Command
 {
     protected $signature = 'app:switch';
+
     protected $description = 'Switch between configured applications';
 
     protected ConfigurationService $config;
+
     protected ChargilyApiService $api;
 
     public function __construct(ConfigurationService $config, ChargilyApiService $api)
