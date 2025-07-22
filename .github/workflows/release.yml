@@ -19,7 +19,11 @@ jobs:
         extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader --ignore-platform-req=ext-posix --ignore-platform-req=ext-fileinfo
+      # Note: We ignore posix and fileinfo requirements because:
+      # - POSIX is not available on Windows
+      # - CLI automatically falls back to individual commands when menu package is unavailable
+      # - This ensures cross-platform compatibility
 
     - name: Get release version
       id: get_version

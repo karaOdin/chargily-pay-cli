@@ -35,7 +35,7 @@ jobs:
         echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction
+      run: composer install --prefer-dist --no-interaction --ignore-platform-req=ext-posix --ignore-platform-req=ext-fileinfo
 
     - name: Check code formatting
       run: vendor/bin/pint --test
@@ -59,13 +59,15 @@ jobs:
         extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction --no-dev --optimize-autoloader
+      run: composer install --prefer-dist --no-interaction --ignore-platform-req=ext-posix --ignore-platform-req=ext-fileinfo --no-dev --optimize-autoloader
 
     - name: Build PHAR
-      run: php chargily app:build --build-version=${{ github.sha }}
+      run: |
+        chmod +x ./vendor/laravel-zero/framework/bin/box
+        ./vendor/laravel-zero/framework/bin/box compile
 
     - name: Upload PHAR artifact
       uses: actions/upload-artifact@v3
       with:
         name: chargily-phar
-        path: builds/chargily
+        path: chargily.phar
