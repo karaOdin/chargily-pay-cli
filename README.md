@@ -32,8 +32,22 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 
 **🎯 Method 1: Composer Global (Cross-Platform)**
 ```bash
+# Install the CLI
 composer global require karaodin/chargily-pay-cli
-chargily  # Run anywhere
+
+# Run directly (no PATH setup needed):
+~/.config/composer/vendor/bin/chargily  # Linux/macOS
+%APPDATA%\Composer\vendor\bin\chargily.bat  # Windows
+
+# Or add to PATH for global access:
+# Linux/macOS: Add to ~/.bashrc or ~/.zshrc
+export PATH="$PATH:$HOME/.config/composer/vendor/bin"
+
+# Windows: Add to System Environment Variables
+# %APPDATA%\Composer\vendor\bin
+
+# Then run anywhere:
+chargily
 ```
 
 **⚡ Method 2: Direct Executable Download**

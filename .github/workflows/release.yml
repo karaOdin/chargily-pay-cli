@@ -25,44 +25,71 @@ jobs:
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-    - name: Build PHAR
-      run: php chargily app:build --build-version=${{ steps.get_version.outputs.VERSION }}
+    - name: Build PHAR using Box
+      run: |
+        chmod +x ./vendor/laravel-zero/framework/bin/box
+        ./vendor/laravel-zero/framework/bin/box compile
 
-    - name: Rename PHAR
-      run: mv builds/chargily builds/chargily.phar
+    - name: Create platform-specific builds
+      run: |
+        mkdir -p builds
+        cp chargily.phar builds/chargily-linux
+        cp chargily.phar builds/chargily-macos
+        cp chargily.phar builds/chargily-windows.phar
+        chmod +x builds/chargily-linux builds/chargily-macos
 
-    - name: Upload release asset
+    - name: Upload Linux build
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./builds/chargily.phar
-        asset_name: chargily.phar
+        asset_path: ./builds/chargily-linux
+        asset_name: chargily-linux
+        asset_content_type: application/octet-stream
+
+    - name: Upload macOS build
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/chargily-macos
+        asset_name: chargily-macos
+        asset_content_type: application/octet-stream
+
+    - name: Upload Windows build
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./builds/chargily-windows.phar
+        asset_name: chargily-windows.phar
         asset_content_type: application/octet-stream
 
     - name: Create checksums
       run: |
         cd builds
-        sha256sum chargily.phar > chargily.phar.sha256
-        md5sum chargily.phar > chargily.phar.md5
+        sha256sum chargily-linux chargily-macos chargily-windows.phar > checksums.sha256
+        md5sum chargily-linux chargily-macos chargily-windows.phar > checksums.md5
 
-    - name: Upload checksum files
+    - name: Upload SHA256 checksums
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./builds/chargily.phar.sha256
-        asset_name: chargily.phar.sha256
+        asset_path: ./builds/checksums.sha256
+        asset_name: checksums.sha256
         asset_content_type: text/plain
 
-    - name: Upload MD5 checksum
+    - name: Upload MD5 checksums
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./builds/chargily.phar.md5
-        asset_name: chargily.phar.md5
+        asset_path: ./builds/checksums.md5
+        asset_name: checksums.md5
         asset_content_type: text/plain
