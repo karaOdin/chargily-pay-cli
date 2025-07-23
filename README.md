@@ -370,7 +370,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **🌐 Chargily Pay** - [https://chargily.com](https://chargily.com)
 - **📖 API Documentation** - [https://dev.chargily.com](https://dev.chargily.com)
-- **🎫 Get API Keys** - [https://pay.chargily.dz/developer](https://pay.chargily.dz/developer)
+- **🎫 Get API Keys** - [https://pay.chargily.dz/](https://pay.chargily.dz/developer)
 - **🐛 Report Issues** - [GitHub Issues](https://github.com/karaOdin/chargily-pay-cli/issues)
 
 ## 📞 Support
