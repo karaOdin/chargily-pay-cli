@@ -6,6 +6,24 @@ Professional command-line interface for **Chargily Pay** - Algeria's leading pay
 [![PHP Version](https://img.shields.io/badge/PHP-%5E8.1-blue)](https://php.net)
 [![Laravel Zero](https://img.shields.io/badge/Laravel%20Zero-10.x-red)](https://laravel-zero.com)
 
+## 📸 Screenshots
+
+### Main Interactive Menu
+![Main Menu](docs/images/main-menu.png)
+*Beautiful interactive menu with application and mode status*
+
+### Payment Creation
+![Create Payment](docs/images/create-payment.png)
+*Intuitive payment creation with real-time validation*
+
+### Balance Monitoring
+![Balance Checker](docs/images/balance-checker.png)
+*Real-time balance monitoring across multiple currencies*
+
+### Configuration Setup
+![Configuration](docs/images/configueration.png)
+*Guided configuration setup with API key validation*
+
 ## ✨ Features
 
 ### 🎯 Core Payment Operations
