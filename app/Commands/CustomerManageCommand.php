@@ -97,7 +97,7 @@ class CustomerManageCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                   Customer Management                       ║');
+        $this->line('║                   Customer Management                        ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -225,6 +225,9 @@ class CustomerManageCommand extends Command
         $this->line("🆔 Customer ID: {$customer['id']}");
         $this->line("👤 Name: {$customer['name']}");
         $this->line("📧 Email: {$customer['email']}");
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function searchCustomers(): void
@@ -516,6 +519,9 @@ class CustomerManageCommand extends Command
 
         $this->info("✅ Customers exported to: {$filename}");
         $this->line('📁 File contains '.count($customers['data']).' customer records');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function formatStatus(string $status): string

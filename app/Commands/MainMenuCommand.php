@@ -177,7 +177,7 @@ class MainMenuCommand extends Command
     {
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                    Application Setup                        ║');
+        $this->line('║                    Application Setup                         ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
 
@@ -250,7 +250,7 @@ class MainMenuCommand extends Command
 
             $this->line('');
             $this->line('╔══════════════════════════════════════════════════════════════╗');
-            $this->line('║                    Setup Complete!                          ║');
+            $this->line('║                    Setup Complete!                           ║');
             $this->line('╚══════════════════════════════════════════════════════════════╝');
             $this->line('');
             $this->info("✅ Application '{$name}' created successfully!");
@@ -430,10 +430,10 @@ class MainMenuCommand extends Command
     {
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Chargily Pay CLI                        ║');
+        $this->line('║                     Chargily Pay CLI                         ║');
         $this->line('║                                                              ║');
-        $this->line('║  🚀 Professional payment management for Algeria             ║');
-        $this->line('║  💳 EDAHABIA & CIB Card support                             ║');
+        $this->line('║  🚀 Professional payment management for Algeria              ║');
+        $this->line('║  💳 EDAHABIA & CIB Card support                              ║');
         $this->line('║  🔒 Secure API integration                                   ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
     }
@@ -454,7 +454,7 @@ class MainMenuCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Chargily Pay CLI                        ║');
+        $this->line('║                     Chargily Pay CLI                         ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("📊 Current: {$app['name']} → ".($currentMode === 'live' ? '🔴 LIVE MODE' : '🧪 TEST MODE'));
@@ -583,7 +583,7 @@ class MainMenuCommand extends Command
     {
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                        Help & Usage                         ║');
+        $this->line('║                        Help & Usage                          ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
 

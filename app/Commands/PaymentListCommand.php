@@ -14,7 +14,7 @@ use function Laravel\Prompts\text;
 
 class PaymentListCommand extends Command
 {
-    protected $signature = 'payment:list 
+    protected $signature = 'payment:list
                            {--limit=10 : Number of payments to show}
                            {--status= : Filter by status (pending, paid, failed, canceled)}
                            {--from= : Start date (Y-m-d format)}
@@ -87,7 +87,7 @@ class PaymentListCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Payment List                            ║');
+        $this->line('║                     Payment List                             ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -211,7 +211,7 @@ class PaymentListCommand extends Command
         $this->table($headers, array_map(function ($payment) {
             return [
                 $payment['id'], // Show full ID
-                number_format($payment['amount'] / 100, 2).' '.strtoupper($payment['currency']),
+                number_format($payment['amount'], 2).' '.strtoupper($payment['currency']),
                 $this->formatStatus($payment['status']),
                 $payment['customer']['name'] ?? 'N/A',
                 $this->formatDate($payment['created_at']),
@@ -413,6 +413,9 @@ class PaymentListCommand extends Command
 
         $this->info("✅ Payments exported to: {$filename}");
         $this->line('📁 File contains '.count($payments).' payment records');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        readline();
     }
 
     protected function waitForUser(): void

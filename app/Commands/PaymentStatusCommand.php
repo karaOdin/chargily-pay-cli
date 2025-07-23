@@ -92,7 +92,7 @@ class PaymentStatusCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                    Payment Status                           ║');
+        $this->line('║                    Payment Status                            ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -104,7 +104,7 @@ class PaymentStatusCommand extends Command
     {
         $this->line('');
         $this->line('╔═══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Payment Details                          ║');
+        $this->line('║                     Payment Details                           ║');
         $this->line('╚═══════════════════════════════════════════════════════════════╝');
         $this->line('');
 

@@ -87,7 +87,7 @@ class ProductManageCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                Product & Price Management                   ║');
+        $this->line('║                Product & Price Management                    ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -293,6 +293,9 @@ class ProductManageCommand extends Command
         $this->line("🆔 Product ID: {$product['id']}");
         $this->line("📦 Name: {$product['name']}");
         $this->line('📝 Description: '.($product['description'] ?? 'N/A'));
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
 
         if (confirm('Create a price for this product now?', true)) {
             $this->createPriceForProduct($product['id']);
@@ -531,6 +534,9 @@ class ProductManageCommand extends Command
 
         $this->info("✅ Products exported to: {$filename}");
         $this->line('📁 File contains '.count($products['data']).' product records');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     // Price Management Methods
@@ -688,6 +694,9 @@ class ProductManageCommand extends Command
         $this->line("🆔 Price ID: {$price['id']}");
         $this->line('💰 Amount: '.number_format($price['amount'] / 100, 2).' '.strtoupper($price['currency']));
         $this->line("📦 Product: {$productId}");
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function selectProductForPrice(): ?string
@@ -981,6 +990,9 @@ class ProductManageCommand extends Command
 
         $this->info("✅ Prices exported to: {$filename}");
         $this->line('📁 File contains '.count($prices['data']).' price records');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function formatDate(string $date): string

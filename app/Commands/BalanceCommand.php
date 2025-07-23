@@ -10,7 +10,7 @@ use LaravelZero\Framework\Commands\Command;
 
 class BalanceCommand extends Command
 {
-    protected $signature = 'balance 
+    protected $signature = 'balance
                            {--fresh : Fetch fresh balance (ignore cache)}
                            {--app= : Check balance for specific application}
                            {--all : Show balance for all applications}';
@@ -128,7 +128,7 @@ class BalanceCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Account Balance                         ║');
+        $this->line('║                     Account Balance                          ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");

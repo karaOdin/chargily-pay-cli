@@ -32,7 +32,7 @@ class AppSetupCommand extends Command
     {
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                     Initial Setup                           ║');
+        $this->line('║                     Initial Setup                            ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
 

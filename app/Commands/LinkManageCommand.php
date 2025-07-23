@@ -99,7 +99,7 @@ class LinkManageCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                  Payment Link Management                    ║');
+        $this->line('║                  Payment Link Management                     ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -255,6 +255,9 @@ class LinkManageCommand extends Command
         $this->line('');
         $this->line('📋 Share this URL with your customers:');
         $this->line("<fg=yellow>{$link['url']}</>");
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
 
         if (confirm('Copy link details to clipboard?', false)) {
             $this->copyLinkDetails($link);
@@ -831,6 +834,9 @@ class LinkManageCommand extends Command
 
         $this->info("✅ Payment links exported to: {$filename}");
         $this->line('📁 File contains '.count($links['data']).' payment link records');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function exportLinkAnalytics(string $linkId, array $analytics): void
@@ -874,6 +880,9 @@ class LinkManageCommand extends Command
 
         $this->info("✅ Analytics exported to: {$filename}");
         $this->line('📊 File contains detailed analytics data');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        fgets(STDIN);
     }
 
     protected function formatDate(string $date): string

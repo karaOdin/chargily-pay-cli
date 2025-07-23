@@ -16,7 +16,7 @@ use function Laravel\Prompts\text;
 
 class ConfigureCommand extends Command
 {
-    protected $signature = 'configure 
+    protected $signature = 'configure
                            {--app= : Configure specific application}
                            {--mode= : Set mode (test|live)}
                            {--reset : Reset all configuration}
@@ -61,7 +61,7 @@ class ConfigureCommand extends Command
     {
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                 Chargily Pay CLI Configuration              ║');
+        $this->line('║                 Chargily Pay CLI Configuration               ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
     }

@@ -13,7 +13,7 @@ use function Laravel\Prompts\text;
 
 class PaymentCreateCommand extends Command
 {
-    protected $signature = 'payment:create 
+    protected $signature = 'payment:create
                            {--amount= : Payment amount in DZD}
                            {--currency=dzd : Payment currency}
                            {--description= : Payment description}
@@ -103,7 +103,7 @@ class PaymentCreateCommand extends Command
 
         $this->line('');
         $this->line('╔══════════════════════════════════════════════════════════════╗');
-        $this->line('║                    Create Payment                           ║');
+        $this->line('║                    Create Payment                            ║');
         $this->line('╚══════════════════════════════════════════════════════════════╝');
         $this->line('');
         $this->line("Application: {$appName}");
@@ -297,6 +297,9 @@ class PaymentCreateCommand extends Command
         $this->line('');
         $this->line('💡 Payment expires automatically after 30 minutes');
         $this->line('💡 Use: chargily payment:status '.$payment['id'].' to check status');
+        $this->line('');
+        $this->line('Press Enter to continue...');
+        readline();
     }
 
     protected function checkNoValidApps(): bool
